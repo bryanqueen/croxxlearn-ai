@@ -1,10 +1,11 @@
 import OpenAI from 'openai';
+import { requireAuth } from '@/middleware/auth';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method === 'POST') {
     const { question } = req.body;
 
@@ -42,3 +43,4 @@ export default async function handler(req, res) {
     res.status(405).json({ error: 'Method not allowed' });
   }
 }
+export default handler

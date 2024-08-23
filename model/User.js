@@ -7,7 +7,7 @@ const UserSchema = new mongoose.Schema({
   institution: {type: String, required: true},
   credits: {type: Number, default: 1000},
   referralCode: {type: String, unique: true},
-  referralLink: {type: String},
+  // referralLink: {type: String},
   referredBy: {type: String}
 });
 
@@ -20,7 +20,7 @@ UserSchema.pre('save', function (next) {
   if(!this.referralCode){
     this.referralCode = generateUniqueCode();
   }
-  this.referralLink = `${process.env.APP_URL}/register?referralCode=${this.referralCode}`;
+  // this.referralLink = `${process.env.APP_URL}/register?referralCode=${this.referralCode}`;
   next()
 })
 

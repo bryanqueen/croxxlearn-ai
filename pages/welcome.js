@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Header from '@/components/Header';
 
 const WelcomePage = () => {
   const [user, setUser] = useState({ name: '', points: 0 });
@@ -18,10 +19,8 @@ const WelcomePage = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-black text-white">
-      <header className="p-4 border-b border-gray-800">
-        <h1 className="text-2xl font-bold">croxxlearn ai.</h1>
-      </header>
-      <main className="flex-grow flex flex-col items-center justify-center p-4">
+      <Header/>
+      <main className="flex-grow flex flex-col items-center justify-center pt-16 p-4">
         <div className="w-full max-w-md">
           <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg shadow-lg p-6 mb-8">
             <h2 className="text-3xl font-bold mb-2">Welcome, {user.name}!</h2>

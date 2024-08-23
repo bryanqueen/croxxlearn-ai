@@ -39,6 +39,8 @@ const institutions = [
 const Register = () => {
   const [selectedInstitution, setSelectedInstitution] = useState(null);
   const [referralCode, setReferralCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -49,6 +51,8 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
     const { name, email, password } = e.target.elements;
 
     try {
@@ -56,7 +60,7 @@ const Register = () => {
         name: name.value,
         email: email.value,
         password: password.value,
-        institution: selectedInstitution.label,
+        institution: selectedInstitution?.label,
         referralCode: referralCode
       });
 
@@ -66,6 +70,9 @@ const Register = () => {
       }
     } catch (error) {
       console.error('Error registering:', error);
+      setError(error.response?.data?.message || 'An error occurred during registration. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -77,6 +84,11 @@ const Register = () => {
       <main className="flex-grow flex flex-col items-center justify-center p-4">
         <div className="w-full max-w-md">
           <h2 className="text-2xl font-bold mb-6">Join Croxxlearn AI</h2>
+          {error && (
+            <div className="mb-4 p-3 bg-red-600 text-white rounded">
+              {error}
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="bg-gray-900 p-6 rounded-lg shadow-lg">
             <div className="mb-4">
               <label className="block mb-2">Name</label>
@@ -101,9 +113,13 @@ const Register = () => {
                 isSearchable
               />
             </div>
-            <input type='hidden' value={referralCode}/>
-            <button type="submit" className="w-full p-3 bg-blue-600 text-white rounded font-bold hover:bg-blue-700 transition duration-300">
-              Register
+            <input type='hidden' name="referralCode" value={referralCode}/>
+            <button 
+              type="submit" 
+              className="w-full p-3 bg-blue-600 text-white rounded font-bold hover:bg-blue-700 transition duration-300 disabled:opacity-50"
+              disabled={loading}
+            >
+              {loading ? 'Registering...' : 'Register'}
             </button>
           </form>
         </div>
@@ -114,5 +130,6 @@ const Register = () => {
     </div>
   );
 };
+
 
 export default Register;
