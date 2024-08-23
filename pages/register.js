@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Select from 'react-select';
 import { useRouter } from 'next/router';
+import Header from '@/components/Header';
 
 const institutions = [
   { value: 'university-of-lagos', label: 'University of Lagos' },
@@ -78,9 +79,7 @@ const Register = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-black text-white">
-      <header className="p-4 border-b border-gray-800">
-        <h1 className="text-2xl font-bold">croxxlearn ai.</h1>
-      </header>
+      <Header/>
       <main className="flex-grow flex flex-col items-center justify-center p-4">
         <div className="w-full max-w-md">
           <h2 className="text-2xl font-bold mb-6">Join Croxxlearn AI</h2>
