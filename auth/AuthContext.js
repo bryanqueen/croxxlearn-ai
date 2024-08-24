@@ -1,4 +1,5 @@
 import { createContext, useState, useEffect } from 'react';
+import axios from 'axios';
 
 export const AuthContext = createContext();
 
@@ -6,27 +7,44 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // This effect runs only on the client-side
-    const token = localStorage.getItem('authToken');
-    setIsAuthenticated(!!token);
+    // Check authentication status on mount
+    checkAuthStatus();
   }, []);
 
-  const login = (token) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('authToken', token);
+  const checkAuthStatus = async () => {
+    try {
+      // Make a request to an endpoint that checks if the user is authenticated
+      const response = await axios.get('/api/check-auth');
+      setIsAuthenticated(response.data.isAuthenticated);
+    } catch (error) {
+      setIsAuthenticated(false);
     }
-    setIsAuthenticated(true);
   };
 
-  const logout = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('authToken');
+  const login = async (email, password) => {
+    try {
+      const response = await axios.post('/api/login', { email, password });
+      if (response.data.success) {
+        setIsAuthenticated(true);
+        return true;
+      }
+    } catch (error) {
+      console.error('Login error:', error);
     }
-    setIsAuthenticated(false);
+    return false;
+  };
+
+  const logout = async () => {
+    try {
+      await axios.post('/api/logout');
+      setIsAuthenticated(false);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, login, logout, checkAuthStatus }}>
       {children}
     </AuthContext.Provider>
   );

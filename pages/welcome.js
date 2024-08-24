@@ -1,32 +1,114 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Header from '@/components/Header';
+import { FaUserFriends, FaCopy } from 'react-icons/fa'; // Import icons
+import toast from 'react-hot-toast';
+import { getCookie } from 'cookies-next';
 
 const WelcomePage = () => {
-  const [user, setUser] = useState({ name: '', points: 0 });
+  const [user, setUser] = useState({ name: '', points: 0, referralCode: '' });
+  const [referralLink, setReferralLink] = useState('');
   const router = useRouter();
 
   useEffect(() => {
-    // Simulating user data fetch
-    setUser({ name: 'Alex', points: 1250 });
+    // Fetch real user data from the API
+    const fetchUserData = async () => {
+      try {
+        const token = getCookie('authToken');
+        if (!token) {
+          console.error('No token found');
+          router.push('/login'); // Redirect to login if no token
+          return;
+        }
+    
+        const response = await fetch('/api/user', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+    
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+          // Construct the referral link
+          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+          setReferralLink(`${baseUrl}/register?referralCode=${userData.referralCode}`);
+        } else {
+          console.error('Failed to fetch user data');
+          if (response.status === 401) {
+            // Token might be expired
+            router.push('/login');
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+
+    fetchUserData();
   }, []);
+
+  const copyReferralLink = async () => {
+    try {
+      await navigator.clipboard.writeText(referralLink);
+      toast.success('Link copied');
+    } catch (err) {
+      console.error('Failed to copy: ', err);
+      // Fallback method for browsers that don't support clipboard API
+      const textArea = document.createElement('textarea');
+      textArea.value = referralLink;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        toast.success('Link copied');
+      } catch (err) {
+        console.error('Fallback: Oops, unable to copy', err);
+        toast.error('Failed to copy link');
+      }
+      document.body.removeChild(textArea);
+    }
+  };
 
   const navigationButtons = [
     { label: 'Try AI Chatbot', icon: '🤖', route: '/chatbot' },
-    { label: 'Quiz Generator', icon: '📝', route: '/quiz-generator' },
-    { label: 'PDF Generator', icon: '📄', route: '/pdf-generator' },
+    { label: 'Try Quiz Generator', icon: '📝', route: '/quiz-generator' },
+    { label: 'Try PDF Generator', icon: '📄', route: '/pdf-generator' },
   ];
 
   return (
     <div className="min-h-screen flex flex-col bg-black text-white">
       <Header/>
-      <main className="flex-grow flex flex-col items-center justify-center pt-16 p-4">
+      <main className="flex-grow flex flex-col items-center justify-center pt-32 p-4">
         <div className="w-full max-w-md">
           <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg shadow-lg p-6 mb-8">
             <h2 className="text-3xl font-bold mb-2">Welcome, {user.name}!</h2>
             <div className="flex items-center justify-between">
-              <span className="text-lg">Your Balance</span>
-              <span className="text-2xl font-bold">{user.points} pts</span>
+              <span className="text-lg">Your Available Credit:</span>
+              <span className="text-2xl font-bold">{user.points} $croxx</span>
+            </div>
+          </div>
+          
+          {/* New Referral Section */}
+          <div className="bg-gray-900 rounded-lg shadow-lg p-6 mb-8">
+            <div className="flex items-center mb-4">
+              <FaUserFriends className="text-3xl text-blue-400 mr-3" />
+              <h3 className="text-xl font-semibold">Refer Friends & Earn Credits</h3>
+            </div>
+            <p className="mb-4">Share your unique link and earn bonus credits when friends sign up!</p>
+            <div className="flex items-center bg-gray-800 rounded p-2">
+              <input 
+                type="text" 
+                value={referralLink} 
+                readOnly 
+                className="bg-transparent flex-grow outline-none text-sm truncate"
+              />
+              <button 
+                onClick={copyReferralLink}
+                className="ml-2 text-blue-400 hover:text-blue-300"
+              >
+                <FaCopy />
+              </button>
             </div>
           </div>
           

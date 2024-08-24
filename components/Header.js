@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/auth/useAuth';
 
 const Header = () => {
-    const { isAuthenticated, logout } = useAuth();
+    const { isAuthenticated, logout, checkAuthStatus } = useAuth();
 
     console.log('Is authenticated:', isAuthenticated);
 
@@ -20,8 +20,15 @@ useEffect(() => {
         const target = e.target;
         if (!target.closest(".menu-btn")) setState(false);
     };
+    checkAuthStatus()
     console.log('Authentication state changed:', isAuthenticated);
-}, [isAuthenticated])
+}, []);
+
+const handleLogout = async () => {
+    await logout();
+    // Force a hard refresh of the page
+    window.location.reload();
+  };
   return (
   <nav className={`absolute top-0 right-0 left-0 z-10 bg-black pb-2 md:text-sm ${state ? "shadow-lg rounded-xl border mx-2 mt-2 md:shadow-none md:border-none md:mx-2 md:mt-0" : ""}`}>
   <div className="gap-x-14 items-center max-w-screen-xl mx-auto px-4 md:flex md:px-8">
@@ -73,7 +80,7 @@ useEffect(() => {
                 </Link>
             )}
             {isAuthenticated ? (
-                <button onClick={logout} className="flex items-center justify-center gap-x-1 py-2 px-4 text-black font-medium bg-white hover:bg-yellow-400 active:bg-gray-900 rounded-full md:inline-flex">
+                <button onClick={handleLogout} className="flex items-center justify-center gap-x-1 py-2 px-4 w-full md:w-20 text-black font-medium bg-white hover:bg-yellow-400 active:bg-gray-900 rounded-full md:inline-flex">
                 Logout
                 </button>
             ) : (

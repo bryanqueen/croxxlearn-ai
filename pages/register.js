@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Select from 'react-select';
+import Select, { useStateManager } from 'react-select';
 import { useRouter } from 'next/router';
+import {IoMdEye, IoMdEyeOff} from 'react-icons/io';
+import Link from 'next/link';
 import Header from '@/components/Header';
 
 const institutions = [
@@ -42,6 +44,7 @@ const Register = () => {
   const [referralCode, setReferralCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState('')
   const router = useRouter();
 
   useEffect(() => {
@@ -80,7 +83,7 @@ const Register = () => {
   return (
     <div className="min-h-screen flex flex-col bg-black text-white">
       <Header/>
-      <main className="flex-grow flex flex-col items-center justify-center p-4">
+      <main className="flex-grow flex flex-col items-center justify-center pt-32 p-4">
         <div className="w-full max-w-md">
           <h2 className="text-2xl font-bold mb-6">Join Croxxlearn AI</h2>
           {error && (
@@ -98,8 +101,26 @@ const Register = () => {
               <input type="email" name="email" className="w-full p-3 border border-gray-700 rounded bg-gray-800 text-white" required />
             </div>
             <div className="mb-4">
-              <label className="block mb-2">Password</label>
-              <input type="password" name="password" className="w-full p-3 border border-gray-700 rounded bg-gray-800 text-white" required />
+              <label htmlFor="password" className="block mb-2">Password</label>
+              <div className="relative">
+                <input 
+                  id="password" 
+                  name="password" 
+                  type={showPassword ? "text" : "password"}
+                  required 
+                  className="w-full p-3 border border-gray-700 rounded bg-gray-800 text-white focus:outline-none focus:border-blue-500" 
+                />
+                <div
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <IoMdEye className='w-5 h-5 text-gray-800'/>
+                  ) : (
+                    <IoMdEyeOff className='w-5 h-5 text-gray-800'/>
+                  )}
+                </div>
+              </div>
             </div>
             <div className="mb-4">
               <label className="block mb-2">Institution</label>
@@ -121,6 +142,9 @@ const Register = () => {
               {loading ? 'Registering...' : 'Register'}
             </button>
           </form>
+          <p className="mt-4 text-center">
+            Already have an account? <Link href="/login" className="text-blue-500 hover:underline">Log In</Link>
+          </p>
         </div>
       </main>
       <footer className="p-4 border-t border-gray-800 text-center text-sm text-gray-500">
