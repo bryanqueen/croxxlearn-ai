@@ -108,7 +108,7 @@ const WelcomePage = () => {
             <h2 className="text-2xl md:text-3xl font-bold mb-2">Welcome, {user.name}!</h2>
             <div className="flex items-center justify-between">
               <span className="text-md md:text-lg">Your Available Credit:</span>
-              <span className="text-xl font-bold md:text-2xl">{user.points} $croxx</span>
+              <span className="text-xl font-bold md:text-2xl">{user.credits} $croxx</span>
             </div>
           </div>
           
