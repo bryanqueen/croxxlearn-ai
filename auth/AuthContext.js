@@ -1,6 +1,9 @@
 import { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
+
+axios.defaults.withCredentials = true;
+
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -24,8 +27,11 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await axios.post('/api/login', { email, password });
+      console.log('Login response:', response)
       if (response.data.success) {
         setIsAuthenticated(true);
+        //store the token
+        document.cookie = `authToken=${response.data.token}; path=/; max-age=3600; SameSite=Lax`;
         return true;
       }
     } catch (error) {

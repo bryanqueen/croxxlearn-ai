@@ -3,49 +3,72 @@ import { useRouter } from 'next/router';
 import Header from '@/components/Header';
 import { FaUserFriends, FaCopy } from 'react-icons/fa'; // Import icons
 import toast from 'react-hot-toast';
-import { getCookie } from 'cookies-next';
+// import { getCookie } from 'cookies-next';
 
 const WelcomePage = () => {
-  const [user, setUser] = useState({ name: '', points: 0, referralCode: '' });
+  const [user, setUser] = useState({ name: '', credits: 0, referralCode: '' });
   const [referralLink, setReferralLink] = useState('');
   const router = useRouter();
 
-  useEffect(() => {
-    // Fetch real user data from the API
-    const fetchUserData = async () => {
-      try {
-        const token = getCookie('authToken');
-        if (!token) {
-          console.error('No token found');
-          router.push('/login'); // Redirect to login if no token
-          return;
-        }
-    
-        const response = await fetch('/api/user', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-    
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
-          // Construct the referral link
-          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-          setReferralLink(`${baseUrl}/register?referralCode=${userData.referralCode}`);
-        } else {
-          console.error('Failed to fetch user data');
-          if (response.status === 401) {
-            // Token might be expired
-            router.push('/login');
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      }
-    };
 
-    fetchUserData();
+  const getCookie = (name) => {
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+      const [cookieName, cookieValue] = cookie.trim().split('=');
+      if (cookieName === name) {
+        return decodeURIComponent(cookieValue);
+      }
+    }
+    return null;
+  };
+
+
+  useEffect(() => {
+          // Fetch real user data from the API
+          const fetchUserData = async () => {
+            try {
+              console.log('Fetching user data...');
+              console.log('All cookies:', document.cookie);
+              const token = getCookie('authToken');
+              console.log('Token from cookie:', token);
+              
+              if (!token) {
+                console.error('No token found in cookie');
+                router.push('/login');
+                return;
+              }
+          
+              console.log('Sending request to /api/user...');
+              const response = await fetch('/api/user', {
+                // headers: {
+                //   'Authorization': `Bearer ${token}`
+                // }
+                credentials: 'include'
+              });
+          
+              console.log('Response status:', response.status);
+          
+              if (response.ok) {
+                const userData = await response.json();
+                console.log('User data received:', userData);
+                setUser(userData);
+                const baseUrl = process.env.APP_URL || 'http://localhost:3000';
+                setReferralLink(`${baseUrl}/register?referralCode=${userData.referralCode}`);
+              } else {
+                console.error('Failed to fetch user data');
+                const errorData = await response.json();
+                console.error('Error details:', errorData);
+                if (response.status === 401) {
+                  console.error('Unauthorized access, redirecting to login');
+                  router.push('/login');
+                }
+              }
+            } catch (error) {
+              console.error('Error fetching user data:', error);
+            }
+          };
+
+          fetchUserData()
   }, []);
 
   const copyReferralLink = async () => {
@@ -82,10 +105,10 @@ const WelcomePage = () => {
       <main className="flex-grow flex flex-col items-center justify-center pt-32 p-4">
         <div className="w-full max-w-md">
           <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg shadow-lg p-6 mb-8">
-            <h2 className="text-3xl font-bold mb-2">Welcome, {user.name}!</h2>
+            <h2 className="text-2xl md:text-3xl font-bold mb-2">Welcome, {user.name}!</h2>
             <div className="flex items-center justify-between">
-              <span className="text-lg">Your Available Credit:</span>
-              <span className="text-2xl font-bold">{user.points} $croxx</span>
+              <span className="text-md md:text-lg">Your Available Credit:</span>
+              <span className="text-xl font-bold md:text-2xl">{user.points} $croxx</span>
             </div>
           </div>
           

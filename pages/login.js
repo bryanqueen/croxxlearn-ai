@@ -24,7 +24,11 @@ const Login = () => {
     try {
       const success = await login(email, password);
       if (success) {
-        router.push('/welcome');
+        // Add the delay here
+        setTimeout(() => {
+          router.push('/welcome');
+        }, 100); // 100ms delay
+        
       } else {
         setError('Invalid credentials.');
       }
@@ -88,7 +92,7 @@ const Login = () => {
             </button>
           </form>
           <p className="mt-4 text-center">
-            Don't have an account? <Link href="/register" className="text-blue-500 hover:underline">Create one</Link>
+            Don&apos;t have an account? <Link href="/register" className="text-blue-500 hover:underline">Create one</Link>
           </p>
         </div>
       </main>
