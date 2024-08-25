@@ -52,7 +52,7 @@ const WelcomePage = () => {
                 const userData = await response.json();
                 console.log('User data received:', userData);
                 setUser(userData);
-                const baseUrl = process.env.APP_URL;
+                const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
                 setReferralLink(`${baseUrl}/register?referralCode=${userData.referralCode}`);
               } else {
                 console.error('Failed to fetch user data');
