@@ -30,7 +30,7 @@ export default async function handler(req, res) {
     // Prepare the user data to send back
     const userData = {
       name: user.name,
-      points: user.credits || 0,
+      credits: user.credits || 0,
       referralCode: user.referralCode
     };
 
