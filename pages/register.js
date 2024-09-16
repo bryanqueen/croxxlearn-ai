@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Select, { useStateManager } from 'react-select';
+import Select from 'react-select';
 import { useRouter } from 'next/router';
 import {IoMdEye, IoMdEyeOff} from 'react-icons/io';
 import Link from 'next/link';

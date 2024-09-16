@@ -7,8 +7,9 @@ const UserSchema = new mongoose.Schema({
   institution: {type: String, required: true},
   credits: {type: Number, default: 1000},
   referralCode: {type: String, unique: true},
-  // referralLink: {type: String},
-  referredBy: {type: String}
+  referredBy: {type: String},
+  resetPasswordOTP: {type: String},
+  resetPasswordOTPExpires: {type: Date}
 });
 
 function generateUniqueCode() {

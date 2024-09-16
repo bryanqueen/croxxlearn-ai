@@ -1,125 +1,248 @@
 import { useState, useRef, useEffect } from 'react';
-import axios from 'axios';
+import Cookies from 'js-cookie'; // Import js-cookie
 import Header from '@/components/Header';
+import { CiCircleChevRight } from "react-icons/ci";
 
 const Chatbot = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [chats, setChats] = useState([]);
+  const [currentChatId, setCurrentChatId] = useState(null);
   const messagesEndRef = useRef(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(scrollToBottom, [messages]);
 
+  useEffect(() => {
+    fetchChats();
+  }, []);
+
+  const fetchChats = async () => {
+    try {
+      const token = Cookies.get('authToken'); // Get the authToken from cookies
+      const response = await fetch('/api/chatbot', {
+        headers: {
+          Authorization: `Bearer ${token}`, // Pass token in the Authorization header
+        },
+      });
+      if (response.ok) {
+        const fetchedChats = await response.json();
+        setChats(fetchedChats);
+        if (fetchedChats.length > 0) {
+          setCurrentChatId(fetchedChats[0]._id);
+          setMessages(fetchedChats[0].messages);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching chats:', error);
+    }
+  };
+
   const handleSubmit = async (question) => {
-    const userMessage = { type: 'user', content: question };
-    setMessages(prevMessages => [...prevMessages, userMessage]);
+    const userMessage = { role: 'user', content: question };
+    setMessages((prevMessages) => [...prevMessages, userMessage]);
     setInput('');
     setLoading(true);
-
+  
     try {
-      const res = await axios.post('/api/chatbot-2', { question }, {
-        responseType: 'stream',
+      const token = Cookies.get('authToken');
+      const response = await fetch('/api/chatbot', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          chatId: currentChatId,
+          question: question,
+        }),
       });
-
-      let aiResponse = '';
-      res.data.on('data', (chunk) => {
-        aiResponse += chunk.toString();
-        setMessages(prevMessages => [
-          ...prevMessages.slice(0, -1),
-          { type: 'ai', content: aiResponse }
-        ]);
-      });
-
-      res.data.on('end', () => {
-        setLoading(false);
-      });
-
-      res.data.on('error', (err) => {
-        setMessages(prevMessages => [
-          ...prevMessages,
-          { type: 'error', content: 'An error occurred while streaming the response.' }
-        ]);
-        setLoading(false);
-      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+  
+      let aiMessage = { role: 'assistant', content: '' };
+      setMessages((prevMessages) => [...prevMessages, aiMessage]);
+  
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+  
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n');
+  
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data === '[DONE]') {
+              setLoading(false);
+              break;
+            }
+            try {
+              const parsedData = JSON.parse(data);
+              if (parsedData.chatId && !currentChatId) {
+                setCurrentChatId(parsedData.chatId);
+                const newChat = { _id: parsedData.chatId, title: 'New Chat', messages: [userMessage] };
+                setChats((prevChats) => [newChat, ...prevChats]);
+              } else if (parsedData.error) {
+                throw new Error(parsedData.error);
+              } else {
+                aiMessage.content += data;
+                setMessages((prevMessages) => [
+                  ...prevMessages.slice(0, -1),
+                  { ...aiMessage },
+                ]);
+              }
+            } catch (e) {
+              aiMessage.content += data;
+              setMessages((prevMessages) => [
+                ...prevMessages.slice(0, -1),
+                { ...aiMessage },
+              ]);
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error('Error fetching response:', error);
-      setMessages(prevMessages => [
+      setMessages((prevMessages) => [
         ...prevMessages,
-        { type: 'error', content: error.response?.data?.message || 'An error occurred while fetching the response.' }
+        { role: 'assistant', content: `Error: ${error.message}` },
       ]);
       setLoading(false);
     }
   };
+  const handleNewChat = () => {
+    setCurrentChatId(null);
+    setMessages([]);
+  };
 
-  // Sample questions for students
-  const sampleQuestions = [
-    "How do I calculate my GPA?",
-    "What are some tips for studying effectively?",
-    "Can you help me with my assignment on economics?"
-  ];
 
+  const formatAIResponse = (content) => {
+    const paragraphs = content.split('\n\n');
+    return paragraphs.map((paragraph, index) => {
+      if (/^\d+\./.test(paragraph)) {
+        const listItems = paragraph.split('\n');
+        return (
+          <ol key={index} className="list-decimal list-inside mb-4">
+            {listItems.map((item, itemIndex) => (
+              <li key={itemIndex} className="mb-1">{item.replace(/^\d+\.\s*/, '')}</li>
+            ))}
+          </ol>
+        );
+      } else {
+        return <p key={index} className="mb-4">{paragraph}</p>;
+      }
+    });
+  };
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
   return (
     <div className="flex flex-col h-screen bg-black text-white">
-      <Header />
-      <main className="flex-grow overflow-auto pt-32 p-4">
+    <Header />
+    <div className="flex-grow flex overflow-hidden pt-32 md:pt-20">
+      {/* Sidebar toggle button for mobile/tablet */}
+      <button
+        className="md:hidden fixed top-20 left-4 z-20 p-2 bg-gray-800 rounded-md"
+        onClick={toggleSidebar}
+      >
+        <CiCircleChevRight />
+      </button>
+
+      {/* Responsive sidebar */}
+      <aside
+        className={`
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          md:translate-x-0
+          fixed md:static
+          top-24 bottom-0 left-0
+          w-64 bg-gray-900 p-4 overflow-y-auto
+          transition-transform duration-300 ease-in-out
+          z-10 md:z-0
+        `}
+      >
+        <button 
+          onClick={handleNewChat}
+          className="w-full p-2 mb-4 bg-blue-600 text-white rounded hover:bg-blue-700 transition duration-300"
+        >
+          New Chat
+        </button>
+        {chats.map(chat => (
+          <div 
+            key={chat._id} 
+            onClick={() => {
+              setCurrentChatId(chat._id);
+              setMessages(chat.messages);
+              if (window.innerWidth < 768) {
+                setSidebarOpen(false); // Close sidebar on mobile after selection
+              }
+            }}
+            className={`p-2 mb-2 rounded cursor-pointer ${
+              currentChatId === chat._id ? 'bg-gray-700' : 'hover:bg-gray-800'
+            }`}
+          >
+            {chat.title}
+          </div>
+        ))}
+      </aside>
+
+      {/* Main chat area */}
+      <main className="flex-grow overflow-auto p-4 md:">
         <div className="max-w-3xl mx-auto">
-          {messages.length === 0 ? (
-            <div className="text-center mt-20">
-              <h2 className="mb-4 text-lg font-semibold">Ask me anything!</h2>
-              <div className="flex flex-col space-y-2">
-                {sampleQuestions.map((question, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleSubmit(question)}
-                    className="p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition duration-300 text-left"
-                  >
-                    <span className="font-medium">{question}</span>
-                  </button>
-                ))}
+          {messages.map((message, index) => (
+            <div key={index} className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
+              <div className={`inline-block p-3 rounded-lg ${
+                message.role === 'user' ? 'bg-blue-600' : 'bg-gray-800'
+              }`}>
+                {message.role === 'assistant' ? (
+                  <div className="prose prose-invert max-w-none">
+                    {formatAIResponse(message.content)}
+                  </div>
+                ) : (
+                  message.content
+                )}
               </div>
             </div>
-          ) : (
-            messages.map((message, index) => (
-              <div key={index} className={`mb-4 ${message.type === 'user' ? 'text-right' : 'text-left'}`}>
-                <div className={`inline-block p-3 rounded-lg ${
-                  message.type === 'user' ? 'bg-blue-600' : 
-                  message.type === 'ai' ? 'bg-gray-800' : 'bg-red-600'
-                }`}>
-                  {message.content}
-                </div>
-              </div>
-            ))
-          )}
+          ))}
           <div ref={messagesEndRef} />
         </div>
       </main>
-      <footer className="p-4 border-t border-gray-800">
-        <form onSubmit={(e) => {
-          e.preventDefault();
-          handleSubmit(input);
-        }} className="max-w-3xl mx-auto flex">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            className="flex-grow p-3 rounded-l bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
-            placeholder="Type your message here..."
-            disabled={loading}
-          />
-          <button 
-            type="submit" 
-            className="p-3 bg-blue-600 text-white rounded-r font-bold hover:bg-blue-700 transition duration-300"
-            disabled={loading}
-          >
-            {loading ? 'Sending...' : 'Send'}
-          </button>
-        </form>
-      </footer>
     </div>
+
+    {/* Footer */}
+    <footer className="p-4 border-t border-gray-800">
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        handleSubmit(input);
+      }} className="max-w-3xl mx-auto flex">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          className="flex-grow p-3 rounded-l bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
+          placeholder="Type your message here..."
+          disabled={loading}
+        />
+        <button 
+          type="submit" 
+          className="p-3 bg-blue-600 text-white rounded-r font-bold hover:bg-blue-700 transition duration-300"
+          disabled={loading}
+        >
+          {loading ? 'Sending...' : 'Send'}
+        </button>
+      </form>
+    </footer>
+  </div>
   );
 };
 

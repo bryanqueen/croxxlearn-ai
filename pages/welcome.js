@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Header from '@/components/Header';
 import { FaUserFriends, FaCopy } from 'react-icons/fa'; // Import icons
-import toast from 'react-hot-toast';
+import toast, {Toaster} from 'react-hot-toast';
 // import { getCookie } from 'cookies-next';
 
 const WelcomePage = () => {
@@ -102,6 +102,7 @@ const WelcomePage = () => {
   return (
     <div className="min-h-screen flex flex-col bg-black text-white">
       <Header/>
+      <Toaster position='top-center' reverseOrder={false}/>
       <main className="flex-grow flex flex-col items-center justify-center pt-32 p-4">
         <div className="w-full max-w-md">
           <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg shadow-lg p-6 mb-8">

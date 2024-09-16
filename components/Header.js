@@ -30,9 +30,9 @@ const handleLogout = async () => {
     window.location.reload();
   };
   return (
-  <nav className={`absolute top-0 right-0 left-0 z-10 bg-black pb-2 md:text-sm ${state ? "shadow-lg rounded-xl border mx-2 mt-2 md:shadow-none md:border-none md:mx-2 md:mt-0" : ""}`}>
+  <nav className={`absolute top-0 right-0 left-0 z-10 bg-black  md:text-sm ${state ? "shadow-lg rounded-xl border mx-2 mt-2 md:shadow-none md:border-none md:mx-2 md:mt-0" : ""}`}>
   <div className="gap-x-14 items-center max-w-screen-xl mx-auto px-4 md:flex md:px-8">
-      <div className="flex items-center justify-between py-5 md:block">
+      <div className="flex items-center justify-between py-2 md:block">
           <Link href="/">
               <img
                   src="Croxxlearn ai logo.png"

@@ -23,6 +23,7 @@ export default async function handler(req, res) {
         });
 
         console.log('JWT created');
+        console.log('Generated token:', token);
 
         // Set the token in an HTTP-only cookie
         const cookieOptions = [
