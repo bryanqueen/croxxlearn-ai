@@ -149,100 +149,100 @@ const Chatbot = () => {
   };
   return (
     <div className="flex flex-col h-screen bg-black text-white">
-    <Header />
-    <div className="flex-grow flex overflow-hidden pt-32 md:pt-20">
-      {/* Sidebar toggle button for mobile/tablet */}
-      <button
-        className="md:hidden fixed top-20 left-4 z-20 p-2 bg-gray-800 rounded-md"
-        onClick={toggleSidebar}
-      >
-        <CiCircleChevRight />
-      </button>
-
-      {/* Responsive sidebar */}
-      <aside
-        className={`
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-          md:translate-x-0
-          fixed md:static
-          top-24 bottom-0 left-0
-          w-64 bg-gray-900 p-4 overflow-y-auto
-          transition-transform duration-300 ease-in-out
-          z-10 md:z-0
-        `}
-      >
-        <button 
-          onClick={handleNewChat}
-          className="w-full p-2 mb-4 bg-blue-600 text-white rounded hover:bg-blue-700 transition duration-300"
+      <Header />
+      <div className="flex-grow flex overflow-hidden pt-16">
+        {/* Sidebar toggle button for mobile/tablet */}
+        <button
+          className="md:hidden fixed top-20 left-4 z-20 p-2 bg-gray-800 rounded-md"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
         >
-          New Chat
+          <CiCircleChevRight className={`transition-transform duration-300 ${sidebarOpen ? 'rotate-180' : ''}`} />
         </button>
-        {chats.map(chat => (
-          <div 
-            key={chat._id} 
-            onClick={() => {
-              setCurrentChatId(chat._id);
-              setMessages(chat.messages);
-              if (window.innerWidth < 768) {
-                setSidebarOpen(false); // Close sidebar on mobile after selection
-              }
-            }}
-            className={`p-2 mb-2 rounded cursor-pointer ${
-              currentChatId === chat._id ? 'bg-gray-700' : 'hover:bg-gray-800'
-            }`}
-          >
-            {chat.title}
-          </div>
-        ))}
-      </aside>
 
-      {/* Main chat area */}
-      <main className="flex-grow overflow-auto p-4 md:">
-        <div className="max-w-3xl mx-auto">
-          {messages.map((message, index) => (
-            <div key={index} className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
-              <div className={`inline-block p-3 rounded-lg ${
-                message.role === 'user' ? 'bg-blue-600' : 'bg-gray-800'
-              }`}>
-                {message.role === 'assistant' ? (
-                  <div className="prose prose-invert max-w-none">
-                    {formatAIResponse(message.content)}
-                  </div>
-                ) : (
-                  message.content
-                )}
-              </div>
+        {/* Responsive sidebar */}
+        <aside
+          className={`
+            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+            md:translate-x-0
+            fixed md:static
+            top-16 bottom-0 left-0
+            w-64 bg-gray-900 p-4 overflow-y-auto
+            transition-transform duration-300 ease-in-out
+            z-10 md:z-0
+          `}
+        >
+          <button 
+            onClick={handleNewChat}
+            className="w-full p-2 mb-4 bg-blue-600 text-white rounded hover:bg-blue-700 transition duration-300"
+          >
+            New Chat
+          </button>
+          {chats.map(chat => (
+            <div 
+              key={chat._id} 
+              onClick={() => {
+                setCurrentChatId(chat._id);
+                setMessages(chat.messages);
+                if (window.innerWidth < 768) {
+                  setSidebarOpen(false);
+                }
+              }}
+              className={`p-2 mb-2 rounded cursor-pointer ${
+                currentChatId === chat._id ? 'bg-gray-700' : 'hover:bg-gray-800'
+              }`}
+            >
+              {chat.title}
             </div>
           ))}
-          <div ref={messagesEndRef} />
-        </div>
-      </main>
-    </div>
+        </aside>
 
-    {/* Footer */}
-    <footer className="p-4 border-t border-gray-800">
-      <form onSubmit={(e) => {
-        e.preventDefault();
-        handleSubmit(input);
-      }} className="max-w-3xl mx-auto flex">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          className="flex-grow p-3 rounded-l bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
-          placeholder="Type your message here..."
-          disabled={loading}
-        />
-        <button 
-          type="submit" 
-          className="p-3 bg-blue-600 text-white rounded-r font-bold hover:bg-blue-700 transition duration-300"
-          disabled={loading}
-        >
-          {loading ? 'Sending...' : 'Send'}
-        </button>
-      </form>
-    </footer>
-  </div>
+        {/* Main chat area */}
+        <main className="flex-grow overflow-auto p-4 md:ml-64">
+          <div className="max-w-3xl mx-auto">
+            {messages.map((message, index) => (
+              <div key={index} className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
+                <div className={`inline-block p-3 rounded-lg ${
+                  message.role === 'user' ? 'bg-blue-600' : 'bg-gray-800'
+                }`}>
+                  {message.role === 'assistant' ? (
+                    <div className="prose prose-invert max-w-none">
+                      {formatAIResponse(message.content)}
+                    </div>
+                  ) : (
+                    message.content
+                  )}
+                </div>
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+        </main>
+      </div>
+
+      {/* Footer */}
+      <footer className="p-4 border-t border-gray-800">
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit(input);
+        }} className="max-w-3xl mx-auto flex">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            className="flex-grow p-3 rounded-l bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
+            placeholder="Type your message here..."
+            disabled={loading}
+          />
+          <button 
+            type="submit" 
+            className="p-3 bg-blue-600 text-white rounded-r font-bold hover:bg-blue-700 transition duration-300"
+            disabled={loading}
+          >
+            {loading ? 'Sending...' : 'Send'}
+          </button>
+        </form>
+      </footer>
+    </div>
   );
 };
 
