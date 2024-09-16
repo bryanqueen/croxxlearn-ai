@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import Cookies from 'js-cookie'; // Import js-cookie
+import Cookies from 'js-cookie';
 import Header from '@/components/Header';
 import { CiCircleChevRight } from "react-icons/ci";
 
-const Chatbot = () => {
+function Chatbot() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -11,6 +11,8 @@ const Chatbot = () => {
   const [currentChatId, setCurrentChatId] = useState(null);
   const messagesEndRef = useRef(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const sidebarRef = useRef(null);
+  const toggleButtonRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -20,20 +22,36 @@ const Chatbot = () => {
 
   useEffect(() => {
     fetchChats();
-  }, []);
+
+    const handleClickOutside = (event) => {
+      if (
+        sidebarRef.current && 
+        !sidebarRef.current.contains(event.target) && 
+        !toggleButtonRef.current.contains(event.target) && 
+        sidebarOpen
+      ) {
+        setSidebarOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [sidebarOpen]);
 
   const fetchChats = async () => {
     try {
-      const token = Cookies.get('authToken'); // Get the authToken from cookies
+      const token = Cookies.get('authToken');
       const response = await fetch('/api/chatbot', {
         headers: {
-          Authorization: `Bearer ${token}`, // Pass token in the Authorization header
+          Authorization: `Bearer ${token}`,
         },
       });
       if (response.ok) {
         const fetchedChats = await response.json();
         setChats(fetchedChats);
-        if (fetchedChats.length > 0) {
+        if (fetchedChats.length > 0 && !currentChatId) {
           setCurrentChatId(fetchedChats[0]._id);
           setMessages(fetchedChats[0].messages);
         }
@@ -121,11 +139,22 @@ const Chatbot = () => {
       setLoading(false);
     }
   };
+
   const handleNewChat = () => {
     setCurrentChatId(null);
     setMessages([]);
   };
 
+  const handleChatSwitch = (chatId) => {
+    const selectedChat = chats.find(chat => chat._id === chatId);
+    if (selectedChat) {
+      setCurrentChatId(chatId);
+      setMessages(selectedChat.messages || []);
+    }
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
+  };
 
   const formatAIResponse = (content) => {
     const paragraphs = content.split('\n\n');
@@ -144,16 +173,15 @@ const Chatbot = () => {
       }
     });
   };
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
+
   return (
     <div className="flex flex-col h-screen bg-black text-white">
       <Header />
       <div className="flex-grow flex overflow-hidden pt-16">
-        {/* Sidebar toggle button for mobile/tablet */}
+        {/* Sidebar toggle button */}
         <button
-          className="md:hidden fixed top-20 left-4 z-20 p-2 bg-gray-800 rounded-md"
+          ref={toggleButtonRef}
+          className="md:hidden fixed top-20 left-4 z-20 p-2 bg-gray-800 rounded-full shadow-lg"
           onClick={() => setSidebarOpen(!sidebarOpen)}
         >
           <CiCircleChevRight className={`transition-transform duration-300 ${sidebarOpen ? 'rotate-180' : ''}`} />
@@ -161,6 +189,7 @@ const Chatbot = () => {
 
         {/* Responsive sidebar */}
         <aside
+          ref={sidebarRef}
           className={`
             ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
             md:translate-x-0
@@ -180,13 +209,7 @@ const Chatbot = () => {
           {chats.map(chat => (
             <div 
               key={chat._id} 
-              onClick={() => {
-                setCurrentChatId(chat._id);
-                setMessages(chat.messages);
-                if (window.innerWidth < 768) {
-                  setSidebarOpen(false);
-                }
-              }}
+              onClick={() => handleChatSwitch(chat._id)}
               className={`p-2 mb-2 rounded cursor-pointer ${
                 currentChatId === chat._id ? 'bg-gray-700' : 'hover:bg-gray-800'
               }`}
@@ -197,7 +220,7 @@ const Chatbot = () => {
         </aside>
 
         {/* Main chat area */}
-        <main className="flex-grow overflow-auto p-4 md:ml-64">
+        <main className="flex-grow overflow-auto p-4 md:ml-64 pb-20">
           <div className="max-w-3xl mx-auto">
             {messages.map((message, index) => (
               <div key={index} className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
@@ -220,7 +243,7 @@ const Chatbot = () => {
       </div>
 
       {/* Footer */}
-      <footer className="p-4 border-t border-gray-800">
+      <footer className="fixed bottom-0 left-0 right-0 p-4 border-t border-gray-800 bg-black">
         <form onSubmit={(e) => {
           e.preventDefault();
           handleSubmit(input);
@@ -244,6 +267,5 @@ const Chatbot = () => {
       </footer>
     </div>
   );
-};
-
+}
 export default Chatbot;
