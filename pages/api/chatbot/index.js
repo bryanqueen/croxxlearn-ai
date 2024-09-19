@@ -52,8 +52,10 @@ async function handler(req, res) {
       return handlePostRequest(req, res);
     case 'GET':
       return handleGetRequest(req, res);
+    case 'DELETE':
+      return handleDeleteRequest(req, res);
     default:
-      res.setHeader('Allow', ['POST', 'GET']);
+      res.setHeader('Allow', ['POST', 'GET', 'DELETE']);
       return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
@@ -62,7 +64,7 @@ async function generateChatTitle(initialMessage) {
   try {
     console.log('Generating chat title');
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4',
       messages: [
         { role: 'system', content: 'Generate a short title (5 words or less) for a chat that starts with the following message.' },
         { role: 'user', content: initialMessage },
@@ -70,10 +72,7 @@ async function generateChatTitle(initialMessage) {
       max_tokens: 10,
       temperature: 0.7,
     });
-
-    const title = response.choices[0].message.content.trim();
-    console.log('Generated title:', title);
-    return title;
+    return response.choices[0].message.content.trim();
   } catch (error) {
     console.error('Error generating chat title:', error);
     return 'New Chat';
@@ -82,12 +81,12 @@ async function generateChatTitle(initialMessage) {
 
 async function handlePostRequest(req, res) {
   console.log('Handling POST request');
-  const { messages, chatId, question } = req.body;
-  console.log('Request body:', { messages, chatId, question });
+  const { chatId, question, isNewChat } = req.body;
+  console.log('Request body:', { chatId, question, isNewChat});
 
   try {
     let chat;
-    if (!chatId) {
+    if (isNewChat || !chatId) {
       // Create a new chat for the first question
       console.log('Creating new chat');
       const title = await generateChatTitle(question);
@@ -135,18 +134,18 @@ async function handlePostRequest(req, res) {
 
     console.log('OpenAI stream created');
 
-    const aiMessage = { role: 'assistant', content: '' };
+    let aiMessage = { role: 'assistant', content: '' };
 
     for await (const chunk of stream) {
       const content = chunk.choices[0]?.delta?.content || '';
       if (content) {
         console.log('Sending chunk:', content);
         aiMessage.content += content;
-        res.write(`data: ${content}\n\n`);
+        res.write(`data: ${JSON.stringify(content)}\n\n`);
       }
     }
 
-    // Save the AI's response to the chat
+    // Save the AI's response to the chat after the stream is complete
     chat.messages.push(aiMessage);
     await chat.save();
 
@@ -170,6 +169,18 @@ async function handleGetRequest(req, res) {
   } catch (error) {
     console.error('Error fetching chats:', error);
     res.status(500).json({ error: 'Error fetching chats' });
+  }
+}
+
+async function handleDeleteRequest(req, res) {
+  const { chatId } = req.query;
+
+  try {
+    await Chat.findByIdAndDelete(chatId);
+    res.status(200).json({ message: 'Chat deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting chat:', error);
+    res.status(500).json({ error: 'Error deleting chat' });
   }
 }
 
