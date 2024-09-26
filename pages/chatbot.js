@@ -6,6 +6,7 @@ import { CiCircleChevRight } from "react-icons/ci";
 import { FiTrash2 } from "react-icons/fi";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import BottomNavbar from '@/components/BottomNavbar';
 
 function Chatbot() {
   const [messages, setMessages] = useState([]);
@@ -226,7 +227,7 @@ function Chatbot() {
   return (
     <div className="flex flex-col h-screen bg-black text-white">
       <Header />
-      <div className="flex-grow flex overflow-hidden pt-20">
+      <div className="flex-grow flex overflow-hidden pt-16 pb-10 md:pt-24">
         <button
           ref={toggleButtonRef}
           className="md:hidden fixed top-20 left-0 z-20 p-2 bg-yellow-600 rounded-md shadow-lg"
@@ -292,8 +293,8 @@ function Chatbot() {
           <div className="max-w-3xl mx-auto">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full">
-                <h2 className="text-2xl font-bold">Sample Questions</h2>
-                <p className='mb-4 font-bold text-sm items-center'>Chat me about any of your academic topics😉</p>
+                <h2 className="text-3xl font-bold text-blue-400">Chatty</h2>
+                <p className='mb-4 font-bold text-center text-gray-300'>Chat me about any of your academic topics😉</p>
                 <div className="space-y-2">
                   {sampleQuestions.map((question, index) => (
                     <button
@@ -325,25 +326,27 @@ function Chatbot() {
         </main>
       </div>
 
-      <footer className="fixed bottom-0 left-0 right-0 p-4 border-t border-gray-800 bg-black">
+      <footer className="fixed bottom-14 left-0 right-0 p-1.5 border-t border-gray-800 bg-black">
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto flex">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            className="flex-grow p-3 rounded-l bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
+            className="flex-grow p-2 rounded-l bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
             placeholder="Type your message here..."
             disabled={loading}
           />
           <button 
             type="submit" 
-            className="p-3 bg-blue-600 text-white rounded-r font-bold hover:bg-blue-700 transition duration-300"
+            className="p-1.5 bg-blue-600 text-white rounded-r font-bold hover:bg-blue-700 transition duration-300"
             disabled={loading}
           >
             {loading ? 'Sending...' : 'Send'}
           </button>
         </form>
       </footer>
+
+      <BottomNavbar/>
 
       <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
         <DialogContent>

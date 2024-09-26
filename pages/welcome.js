@@ -94,9 +94,9 @@ const WelcomePage = () => {
   };
 
   const navigationButtons = [
-    { label: 'Try AI Chatbot', icon: '🤖', route: '/chatbot' },
-    { label: 'Try Quiz Generator', icon: '📝', route: '/quiz' },
-    { label: 'Try PDF Generator', icon: '📄', route: '/pdf-generator' },
+    { label: 'Try Chatty', icon: '🤖', route: '/chatbot' },
+    { label: 'Try Quizzy', icon: '📝', route: '/quiz' },
+    { label: 'Try Docky', icon: '📄', route: '/pdf-generator' },
   ];
 
   return (
@@ -113,7 +113,7 @@ const WelcomePage = () => {
             </div>
           </div>
           
-          {/* New Referral Section */}
+          {/*Referral Section */}
           <div className="bg-gray-900 rounded-lg shadow-lg p-6 mb-8">
             <div className="flex items-center mb-4">
               <FaUserFriends className="text-3xl text-blue-400 mr-3" />
