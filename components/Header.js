@@ -18,7 +18,7 @@ const Header = () => {
             if (!target.closest(".menu-btn")) setState(false);
         };
         checkAuthStatus();
-    }, []);
+    }, [checkAuthStatus]);
 
     const handleLogout = async () => {
         await logout();
