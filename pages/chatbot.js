@@ -292,12 +292,13 @@ function Chatbot() {
           <div className="max-w-3xl mx-auto">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full">
-                <h2 className="text-2xl font-bold mb-4">Sample Questions</h2>
+                <h2 className="text-2xl font-bold">Sample Questions</h2>
+                <p className='mb-4 font-bold text-sm items-center'>Chat me about any of your academic topics😉</p>
                 <div className="space-y-2">
                   {sampleQuestions.map((question, index) => (
                     <button
                       key={index}
-                      onClick={() => handleSubmit({ preventDefault: () => {} })}
+                      onClick={handleSubmit}
                       className="w-full p-2 text-left bg-gray-800 hover:bg-gray-700 rounded transition duration-300"
                     >
                       {question}

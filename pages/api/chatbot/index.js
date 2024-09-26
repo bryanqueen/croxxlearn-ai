@@ -85,6 +85,11 @@ async function handlePostRequest(req, res) {
   console.log('Request body:', { chatId, question, isNewChat});
 
   try {
+        // Check if user has enough credits
+        if (req.user.credits < 0.5) {
+          console.log('Insufficient credits');
+          return res.status(403).json({ error: 'Insufficient credits' });
+        }
     let chat;
     if (isNewChat || !chatId) {
       // Create a new chat for the first question
@@ -148,6 +153,10 @@ async function handlePostRequest(req, res) {
     // Save the AI's response to the chat after the stream is complete
     chat.messages.push(aiMessage);
     await chat.save();
+
+    // Deduct credits and update user
+    req.user.credits -= 0.5;
+    await req.user.save();
 
     console.log('Stream completed');
     res.write('data: [DONE]\n\n');

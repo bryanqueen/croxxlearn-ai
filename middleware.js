@@ -16,5 +16,5 @@ export function middleware(request) {
 
 // Define the paths that should trigger this middleware
 export const config = {
-  matcher: ['/chatbot', '/welcome', '/another-protected-route'], // Add other protected routes here
+  matcher: ['/chatbot', '/welcome', '/quiz'], // Add other protected routes here
 };

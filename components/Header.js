@@ -7,8 +7,8 @@ const Header = () => {
     const [state, setState] = useState(false);
 
     const navigation = [
-        { title: "Chatbot", path: "/chatbot" },
-        { title: "Quiz Generator", path: "/" },
+        { title: "Chatty", path: "/chatbot" },
+        { title: "Quizzy", path: "/quiz" },
         { title: "PDF Generator", path: "/" },
     ];
 
@@ -26,7 +26,7 @@ const Header = () => {
     };
 
     return (
-        <nav className="fixed top-0 left-0 right-0 z-50 bg-black md:text-sm">
+        <nav className="fixed top-0 left-0 right-0 z-50 bg-black md:text-sm border-2 rounded-2xl mx-2 my-1.5 md:mx-6">
             <div className="gap-x-14 items-center max-w-screen-xl mx-auto px-4 md:flex md:px-8">
                 <div className="flex items-center justify-between py-3 md:block">
                     <Link href="/">
@@ -53,8 +53,8 @@ const Header = () => {
                         </button>
                     </div>
                 </div>
-                <div className={`flex-1 items-center mt-8 md:mt-0 md:flex ${state ? 'block' : 'hidden'} `}>
-                    <ul className="justify-center items-center space-y-6 md:flex md:space-x-6 md:space-y-0">
+                <div className={`flex-1 items-center md:flex border-white ${state ? 'block' : 'hidden'} `}>
+                    <ul className="justify-center md:pl-64 flex md:flex-row flex-col b gap-3">
                         {navigation.map((item, idx) => (
                             <li key={idx} className="text-white hover:text-gray-200">
                                 <a href={item.path} className="block">
@@ -63,7 +63,7 @@ const Header = () => {
                             </li>
                         ))}
                     </ul>
-                    <div className="flex-1 gap-x-6 items-center justify-end mt-6 space-y-6 md:flex md:space-y-0 md:mt-0">
+                    <div className="flex-1 gap-x-6 items-center justify-end my-4 space-y-6 md:flex md:space-y-0 ">
                         {!isAuthenticated && (
                             <Link href="/register" className="block text-white hover:text-gray-200">
                                 Sign up

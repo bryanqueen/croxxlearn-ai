@@ -95,7 +95,7 @@ const WelcomePage = () => {
 
   const navigationButtons = [
     { label: 'Try AI Chatbot', icon: '🤖', route: '/chatbot' },
-    { label: 'Try Quiz Generator', icon: '📝', route: '/quiz-generator' },
+    { label: 'Try Quiz Generator', icon: '📝', route: '/quiz' },
     { label: 'Try PDF Generator', icon: '📄', route: '/pdf-generator' },
   ];
 

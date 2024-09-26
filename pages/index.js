@@ -6,29 +6,31 @@ import { Inter } from "next/font/google";
 import PdfGenerator from '../public/Pdf Generator.jpg';
 import QuizGenerator from '../public/Quiz Generator.jpg';
 import TaskHelper from '../public/Task Helper.jpg';
+import Marquee from '@/components/Marquee';
 
 const inter = Inter({ subsets: ["latin"] });
 
 const Features = [
   {
-    name: 'Homework Helper',
+    name: 'Chatty',
     desc: 'Ask questions and get help with your homework tasks.',
     image: TaskHelper,
-    path: '/'
+    path: '/chatbot'
   },
   {
-    name: 'Quiz Generator',
+    name: 'Quizzy',
     desc: 'Generate quizzes for practice on any topic you choose.',
     image: QuizGenerator,
-    path: '/'
+    path: '/quiz'
   },
   {
-    name: 'PDF Generator',
+    name: 'Docky',
     desc: 'Generate detailed PDF handbooks for better understanding.',
     image: PdfGenerator,
     path: '/'
   }
 ]
+const items = ['AI', 'WILL', 'REPLACE', 'YOUR', 'TUTORS', '✨']
 
 const Home = () => (
   <div className={`min-h-screen flex flex-col ${inter.className}`}>
@@ -41,22 +43,10 @@ const Home = () => (
         ))}
       </div>
     </main>
+    <Marquee items={items}/>
     <Footer />
   </div>
 );
 
 export default Home;
-
-{/* <div className="bg-secondary text-white p-6 rounded shadow">
-<h2 className="text-xl font-semibold mb-4">Homework Helper</h2>
-<p>Ask questions and get help with your homework tasks.</p>
-</div>
-<div className="bg-secondary text-white p-6 rounded shadow">
-<h2 className="text-xl font-semibold mb-4">Quiz Generator</h2>
-<p>Generate quizzes for practice on any topic you choose.</p>
-</div>
-<div className="bg-secondary text-white p-6 rounded shadow">
-<h2 className="text-xl font-semibold mb-4">PDF Generator</h2>
-<p>Generate detailed PDF handbooks for better understanding.</p>
-</div> */}
 
