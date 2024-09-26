@@ -18,7 +18,7 @@ export default function QuizGenerator() {
   const [generatedQuestions, setGeneratedQuestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const router = useRouter();
+
 
 
 

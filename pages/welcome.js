@@ -69,7 +69,7 @@ const WelcomePage = () => {
           };
 
           fetchUserData()
-  }, []);
+  }, [router]);
 
   const copyReferralLink = async () => {
     try {

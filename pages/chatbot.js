@@ -54,7 +54,7 @@ function Chatbot() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [sidebarOpen]);
+  }, [sidebarOpen, fetchChats]);
 
   const fetchChats = async () => {
     try {

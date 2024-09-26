@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/auth/useAuth';
 
@@ -30,7 +31,7 @@ const Header = () => {
             <div className="gap-x-14 items-center max-w-screen-xl py-1 mx-auto px-4 md:flex md:px-8">
                 <div className="flex items-center justify-between  md:block">
                     <Link href="/">
-                        <img
+                        <Image
                             src="Croxxlearn ai logo.png"
                             width={200}
                             height={100}
