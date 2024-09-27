@@ -32,7 +32,7 @@ const Header = () => {
                 <div className="flex items-center justify-between  md:block">
                     <Link href="/">
                         <Image
-                            src="Croxxlearn ai logo.png"
+                            src="/Croxxlearn ai logo.png"
                             width={200}
                             height={100}
                             alt="logo"

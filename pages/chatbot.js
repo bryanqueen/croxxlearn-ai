@@ -34,10 +34,10 @@ function Chatbot() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(scrollToBottom, [messages]);
+  // useEffect(scrollToBottom, [messages]);
 
   useEffect(() => {
-    fetchChats();
+  fetchChats()
 
     const handleClickOutside = (event) => {
       if (
@@ -54,7 +54,7 @@ function Chatbot() {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [sidebarOpen, fetchChats]);
+  }, [sidebarOpen]);
 
   const fetchChats = async () => {
     try {

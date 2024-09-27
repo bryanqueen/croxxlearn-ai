@@ -177,7 +177,7 @@ export default function QuizGenerator() {
               </div>
             ))
           ) : (
-            <p className="text-gray-400">No questions generated yet. Fill out the form and click "Generate Quiz" to start.</p>
+            <p className="text-gray-400">No questions generated yet. Fill out the form and click &quot;Generate Quiz&quot; to start.</p>
           )}
         </div>
       </main>
