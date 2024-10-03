@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Header from '@/components/Header';
 import { FaUserFriends, FaCopy } from 'react-icons/fa'; // Import icons
 import toast, {Toaster} from 'react-hot-toast';
+import BottomNavbar from '@/components/BottomNavbar';
 // import { getCookie } from 'cookies-next';
 
 const WelcomePage = () => {
@@ -94,16 +95,16 @@ const WelcomePage = () => {
   };
 
   const navigationButtons = [
-    { label: 'Try Chatty', icon: '🤖', route: '/chatbot' },
-    { label: 'Try Quizzy', icon: '📝', route: '/quiz' },
-    { label: 'Try Docky', icon: '📄', route: '/pdf-generator' },
+    { label: 'Try CroxxChat', icon: '🤖', route: '/chatbot' },
+    { label: 'Try CroxxQuiz', icon: '📝', route: '/quiz' },
+    { label: 'Try CroxxDoc-Chat', icon: '📄', route: '/pdf-generator' },
   ];
 
   return (
     <div className="min-h-screen flex flex-col bg-black text-white">
       <Header/>
       <Toaster position='top-center' reverseOrder={false}/>
-      <main className="flex-grow flex flex-col items-center justify-center pt-32 p-4">
+      <main className="flex-grow flex flex-col items-center justify-center pt-24 p-4">
         <div className="w-full max-w-md">
           <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg shadow-lg p-6 mb-8">
             <h2 className="text-2xl md:text-3xl font-bold mb-2">Welcome, {user.name}!</h2>
@@ -136,8 +137,8 @@ const WelcomePage = () => {
             </div>
           </div>
           
-          <h3 className="text-xl font-semibold mb-4">What would you like to do?</h3>
-          <div className="grid gap-4">
+          <h3 className="text-xl font-semibold mb-4">What would you like to try?</h3>
+          <div className="grid gap-4 pb-12">
             {navigationButtons.map((button, index) => (
               <button
                 key={index}
@@ -154,9 +155,10 @@ const WelcomePage = () => {
           </div>
         </div>
       </main>
-      <footer className="p-4 border-t border-gray-800 text-center text-sm text-gray-500">
+      {/* <footer className="p-4 border-t border-gray-800 text-center text-sm text-gray-500">
         © 2024 Croxxlearn AI. All rights reserved.
-      </footer>
+      </footer> */}
+      <BottomNavbar/>
     </div>
   );
 };

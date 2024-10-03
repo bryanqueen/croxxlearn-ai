@@ -67,10 +67,10 @@ export default function QuizGenerator() {
   return (
     <div className="flex flex-col min-h-screen bg-black text-white">
       <Header />
-      <main className="flex-grow max-w-3xl mx-auto w-full pt-24 pb-24 px-4">
-        <div className='flex flex-col items-center h-full mb-8'>
+      <main className="flex-grow max-w-3xl mx-auto w-full pt-20 pb-20 md:pt-24 md:pb-24 px-4">
+        <div className='flex flex-col items-center h-full mb-4'>
           <h2 className="text-3xl font-bold text-blue-400">Quizzy</h2>
-          <p className='mb-4 font-bold text-center text-gray-300'>Generate AI-powered quiz on any topic of your choice</p>
+          <p className='font-bold text-center text-gray-300'>Generate AI-powered quiz on any topic of your choice</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6 bg-gray-900 p-8 rounded-lg shadow-lg">
           <div>
@@ -83,6 +83,20 @@ export default function QuizGenerator() {
               required
               className="mt-1 bg-gray-800 border-gray-700 text-white focus:ring-blue-500 focus:border-blue-500"
             />
+          </div>
+
+          <div>
+            <Label htmlFor="difficulty" className="text-gray-300 font-semibold">Difficulty</Label>
+            <Select value={difficulty} onValueChange={setDifficulty}>
+              <SelectTrigger className="mt-1 bg-gray-800 border-gray-700 text-white">
+                <SelectValue placeholder="Select difficulty" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="easy">Easy</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="hard">Hard</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
           <div>
@@ -113,19 +127,7 @@ export default function QuizGenerator() {
             </RadioGroup>
           </div>
           
-          <div>
-            <Label htmlFor="difficulty" className="text-gray-300 font-semibold">Difficulty</Label>
-            <Select value={difficulty} onValueChange={setDifficulty}>
-              <SelectTrigger className="mt-1 bg-gray-800 border-gray-700 text-white">
-                <SelectValue placeholder="Select difficulty" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="easy">Easy</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="hard">Hard</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+
           
           <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={loading}>
             {loading ? (

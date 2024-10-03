@@ -12,7 +12,7 @@ import { InlineMath, BlockMath } from 'react-katex';
 import 'katex/dist/katex.min.css';
 import { Textarea } from "@/components/ui/textarea";
 
-function Chatbot() {
+function Chatbot({chat}) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -44,7 +44,7 @@ function Chatbot() {
   useEffect(scrollToBottom, [messages]);
 
   useEffect(() => {
-    adjusrTextareaHeight();
+    adjustTextareaHeight();
   }, [input])
 
   useEffect(() => {
@@ -67,7 +67,7 @@ function Chatbot() {
     };
   }, [sidebarOpen]);
 
-  const adjusrTextareaHeight = () => {
+  const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
     if(textarea) {
       textarea.style.height = 'auto';
@@ -349,7 +349,7 @@ function Chatbot() {
           <div className="max-w-3xl mx-auto">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full">
-                <h2 className="text-3xl font-bold text-blue-400">Chatty</h2>
+                <h2 className="text-3xl font-bold text-blue-400">CroxxChat</h2>
                 <p className='mb-4 font-bold text-center text-gray-300'>Chat me about any of your academic topics😉</p>
                 <div className="space-y-2">
                   {sampleQuestions.map((question, index) => (
@@ -439,3 +439,5 @@ function Chatbot() {
 }
 
 export default Chatbot;
+
+// export function
