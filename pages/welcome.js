@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Header from '@/components/Header';
-import { FaUserFriends, FaCopy } from 'react-icons/fa'; // Import icons
+import { FaUserFriends, FaCopy, FaCoins } from 'react-icons/fa'; // Import icons
 import toast, {Toaster} from 'react-hot-toast';
 import BottomNavbar from '@/components/BottomNavbar';
 // import { getCookie } from 'cookies-next';
@@ -106,12 +106,19 @@ const WelcomePage = () => {
       <Toaster position='top-center' reverseOrder={false}/>
       <main className="flex-grow flex flex-col items-center justify-center pt-20 md:pt-24 p-4">
         <div className="w-full max-w-md">
-          <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg shadow-lg p-6 mb-8">
+        <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg shadow-lg p-6 mb-8">
             <h2 className="text-2xl md:text-3xl font-bold mb-2">Welcome, {user.name}!</h2>
             <div className="flex items-center justify-between">
               <span className="text-md md:text-lg">Your Available Credit:</span>
               <span className="text-xl font-bold md:text-2xl">{user.credits} $croxx</span>
             </div>
+            <button
+              onClick={() => router.push('/top-up')}
+              className="mt-4 flex items-center justify-center w-full bg-white text-blue-600 font-semibold py-2 px-4 rounded-lg hover:bg-gray-100 transition-colors duration-300"
+            >
+              <FaCoins className="mr-2" />
+              Top Up Credits
+            </button>
           </div>
           
           {/*Referral Section */}
