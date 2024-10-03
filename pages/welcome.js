@@ -104,7 +104,7 @@ const WelcomePage = () => {
     <div className="min-h-screen flex flex-col bg-black text-white">
       <Header/>
       <Toaster position='top-center' reverseOrder={false}/>
-      <main className="flex-grow flex flex-col items-center justify-center pt-24 p-4">
+      <main className="flex-grow flex flex-col items-center justify-center pt-20 md:pt-24 p-4">
         <div className="w-full max-w-md">
           <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg shadow-lg p-6 mb-8">
             <h2 className="text-2xl md:text-3xl font-bold mb-2">Welcome, {user.name}!</h2>

@@ -69,7 +69,7 @@ export default function QuizGenerator() {
       <Header />
       <main className="flex-grow max-w-3xl mx-auto w-full pt-20 pb-20 md:pt-24 md:pb-24 px-4">
         <div className='flex flex-col items-center h-full mb-4'>
-          <h2 className="text-3xl font-bold text-blue-400">Quizzy</h2>
+          <h2 className="text-3xl font-bold text-blue-400">CroxxQuiz</h2>
           <p className='font-bold text-center text-gray-300'>Generate AI-powered quiz on any topic of your choice</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6 bg-gray-900 p-8 rounded-lg shadow-lg">

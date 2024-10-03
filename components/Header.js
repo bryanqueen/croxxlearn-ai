@@ -31,12 +31,13 @@ const Header = () => {
             <div className="gap-x-14 items-center max-w-screen-xl py-1 mx-auto px-4 md:flex md:px-8">
                 <div className="flex items-center justify-between  md:block">
                     <Link href="/">
-                        <Image
+                        {/* <Image
                             src="/Croxxlearn ai logo.png"
                             width={200}
                             height={100}
                             alt="logo"
-                        />
+                        /> */}
+                        <img src='/Croxxlearn ai logo.png' width={200} height={100}/>
                     </Link>
                     <div className="md:hidden">
                         <button className="menu-btn text-white hover:text-gray-200"
