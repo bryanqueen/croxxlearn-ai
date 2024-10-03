@@ -8,55 +8,69 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Establish MongoDB connection outside of the request handler
+let mongoConnection = null;
+
+async function ensureMongoConnection() {
+  if (!mongoConnection) {
+    mongoConnection = await connectMongo();
+  }
+  return mongoConnection;
+}
+
 async function handler(req, res) {
   console.log('Received request:', req.method, req.url);
 
-  function extractToken(req) {
-    if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
-      return req.headers.authorization.split(' ')[1];
-    } else if (req.query && req.query.token) {
-      return req.query.token;
-    }
-    return null;
-  }
-  
-  const token = extractToken(req);
-  if (!token) {
-    console.log('No token provided');
-    return res.status(401).json({ error: 'No token provided' });
-  }
-  
+
   try {
-    const decoded = await verifyToken(token);
-    if (!decoded || !decoded.userId) {
-      console.log('Invalid token');
-      return res.status(401).json({ error: 'Invalid token' });
+    //Ensure MongoDB connection is established before proceeding
+    await ensureMongoConnection();
+    console.log('Connected to MongoDB');
+
+    function extractToken(req) {
+      if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
+        return req.headers.authorization.split(' ')[1];
+      } else if (req.query && req.query.token) {
+        return req.query.token;
+      }
+      return null;
     }
-    const user = await User.findById(decoded.userId);
-    if (!user) {
-      console.log('User not found');
-      return res.status(401).json({ error: 'User not found' });
+    
+    const token = extractToken(req);
+    if (!token) {
+      console.log('No token provided');
+      return res.status(401).json({ error: 'No token provided' });
     }
-    req.user = user;
-    console.log('User authenticated:', user._id);
+    
+      const decoded = await verifyToken(token);
+      if (!decoded || !decoded.userId) {
+        console.log('Invalid token');
+        return res.status(401).json({ error: 'Invalid token' });
+      }
+      const user = await User.findById(decoded.userId);
+      if (!user) {
+        console.log('User not found');
+        return res.status(401).json({ error: 'User not found' });
+      }
+      req.user = user;
+      console.log('User authenticated:', user._id);
+  
+  
+  //Handle the request based on the HTTP method
+    switch (req.method) {
+      case 'POST':
+        return handlePostRequest(req, res);
+      case 'GET':
+        return handleGetRequest(req, res);
+      case 'DELETE':
+        return handleDeleteRequest(req, res);
+      default:
+        res.setHeader('Allow', ['POST', 'GET', 'DELETE']);
+        return res.status(405).end(`Method ${req.method} Not Allowed`);
+    }
   } catch (error) {
-    console.error('Token verification error:', error);
-    return res.status(401).json({ error: 'Invalid token' });
-  }
-
-  await connectMongo();
-  console.log('Connected to MongoDB');
-
-  switch (req.method) {
-    case 'POST':
-      return handlePostRequest(req, res);
-    case 'GET':
-      return handleGetRequest(req, res);
-    case 'DELETE':
-      return handleDeleteRequest(req, res);
-    default:
-      res.setHeader('Allow', ['POST', 'GET', 'DELETE']);
-      return res.status(405).end(`Method ${req.method} Not Allowed`);
+    console.error('Error in handler:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -85,11 +99,11 @@ async function handlePostRequest(req, res) {
   console.log('Request body:', { chatId, question, isNewChat});
 
   try {
-        // Check if user has enough credits
-        if (req.user.credits < 0.5) {
-          console.log('Insufficient credits');
-          return res.status(403).json({ error: 'Insufficient credits' });
-        }
+    // Check if user has enough credits
+    if (req.user.credits < 0.5) {
+      console.log('Insufficient credits');
+      return res.status(403).json({ error: 'Insufficient credits' });
+    }
     let chat;
     if (isNewChat || !chatId) {
       // Create a new chat for the first question
@@ -130,7 +144,13 @@ async function handlePostRequest(req, res) {
       messages: [
         {
           role: 'system',
-          content: 'You are an academic assistant for university students. Provide concise, accurate answers to academic questions. Focus on key points and avoid unnecessary details.',
+          content: `You are an academic assistant for university students. Provide concise, accurate answers to academic questions. Focus on key points and avoid unnecessary details. 
+          
+          When using mathematical expressions, format them as follows:
+          - For inline math, use \$$ and \$$ to enclose the expression. Example: The equation is \$$E = mc^2\$$.
+          - For display (block) math, use \\[ and \\] to enclose the expression. Example: 
+            The quadratic formula is:
+            \\[x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\\]`,
         },
         ...chat.messages, // Include full conversation history
       ],
@@ -149,6 +169,11 @@ async function handlePostRequest(req, res) {
         res.write(`data: ${JSON.stringify(content)}\n\n`);
       }
     }
+
+    // Post-process the AI's response to ensure proper formatting
+    aiMessage.content = aiMessage.content
+      .replace(/\$\$(.*?)\$\$/g, (_, match) => `\\[${match}\\]`)
+      .replace(/\$(.*?)\$/g, (_, match) => `\$$${match}\$$`);
 
     // Save the AI's response to the chat after the stream is complete
     chat.messages.push(aiMessage);

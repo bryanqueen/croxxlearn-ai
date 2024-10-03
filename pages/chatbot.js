@@ -3,10 +3,14 @@ import { useRouter } from 'next/router';
 import Cookies from 'js-cookie';
 import Header from '@/components/Header';
 import { CiCircleChevRight } from "react-icons/ci";
-import { FiTrash2 } from "react-icons/fi";
+import { FiTrash2, FiSend } from "react-icons/fi";
+import { Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import BottomNavbar from '@/components/BottomNavbar';
+import { InlineMath, BlockMath } from 'react-katex';
+import 'katex/dist/katex.min.css';
+import { Textarea } from "@/components/ui/textarea";
 
 function Chatbot() {
   const [messages, setMessages] = useState([]);
@@ -14,10 +18,13 @@ function Chatbot() {
   const [loading, setLoading] = useState(false);
   const [chats, setChats] = useState([]);
   const [currentChatId, setCurrentChatId] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const messagesEndRef = useRef(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const sidebarRef = useRef(null);
   const toggleButtonRef = useRef(null);
+  const textareaRef = useRef(null);
   const router = useRouter();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [chatToDelete, setChatToDelete] = useState(null);
@@ -34,10 +41,14 @@ function Chatbot() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // useEffect(scrollToBottom, [messages]);
+  useEffect(scrollToBottom, [messages]);
 
   useEffect(() => {
-  fetchChats()
+    adjusrTextareaHeight();
+  }, [input])
+
+  useEffect(() => {
+    fetchChats();
 
     const handleClickOutside = (event) => {
       if (
@@ -56,7 +67,20 @@ function Chatbot() {
     };
   }, [sidebarOpen]);
 
+  const adjusrTextareaHeight = () => {
+    const textarea = textareaRef.current;
+    if(textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 100)}px`;
+    }
+  };
+
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+  };
+
   const fetchChats = async () => {
+    if (!isInitialLoad) setIsLoading(true);
     try {
       const token = Cookies.get('authToken');
       const response = await fetch('/api/chatbot', {
@@ -74,14 +98,18 @@ function Chatbot() {
       }
     } catch (error) {
       console.error('Error fetching chats:', error);
+    } finally {
+      setIsLoading(false);
+      setIsInitialLoad(false);
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, questionText = null) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    const submittedInput = questionText || input;
+    if (!submittedInput.trim()) return;
 
-    const userMessage = { role: 'user', content: input };
+    const userMessage = { role: 'user', content: submittedInput };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setInput('');
     setLoading(true);
@@ -96,7 +124,7 @@ function Chatbot() {
         },
         body: JSON.stringify({
           chatId: currentChatId,
-          question: input,
+          question: submittedInput,
           isNewChat: !currentChatId
         }),
       });
@@ -159,7 +187,6 @@ function Chatbot() {
     }
   };
 
-
   const handleDeleteChat = async () => {
     if (!chatToDelete) return;
 
@@ -178,14 +205,12 @@ function Chatbot() {
           setCurrentChatId(null);
           setMessages([]);
         }
-
       } else {
         const errorData = await response.json();
         console.error('Failed to delete chat:', errorData.error);
       }
     } catch (error) {
       console.error('Error deleting chat:', error);
-
     } finally {
       setDeleteModalOpen(false);
       setChatToDelete(null);
@@ -193,41 +218,72 @@ function Chatbot() {
   };
 
   const formatAIResponse = (content) => {
-    const formatLine = (line) => {
-      line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-      
-      if (line.startsWith('### ')) {
-        return <h3 className="text-xl font-bold mt-4 mb-2">{line.slice(4)}</h3>;
-      }
-      
-      const numberedLine = line.replace(/^(\d+\.\s)/, '<span class="mr-2">$1</span>');
-      
-      return <span dangerouslySetInnerHTML={{ __html: numberedLine }} />;
+    const renderMath = (text) => {
+      // Regular expression to match LaTeX-style math expressions
+      const mathRegex = /\\$$(.*?)\\$$|\\\[(.*?)\\\]/gs;
+      const parts = text.split(mathRegex);
+  
+      return parts.map((part, index) => {
+        if (index % 3 === 1) {
+          // Inline math
+          return <InlineMath key={index} math={part} />;
+        } else if (index % 3 === 2) {
+          // Display (block) math
+          return <BlockMath key={index} math={part} />;
+        }
+        // Regular text
+        return part;
+      });
     };
-
+  
+    const renderElement = (element, index) => {
+      if (typeof element === 'string') {
+        if (element.startsWith('### ')) {
+          return <h3 key={index} className="text-xl font-bold mt-4 mb-2">{element.slice(4)}</h3>;
+        }
+        
+        const boldRegex = /\*\*(.*?)\*\*/g;
+        const parts = element.split(boldRegex);
+        
+        return (
+          <span key={index}>
+            {parts.map((part, i) => 
+              i % 2 === 0 ? renderMath(part) : <strong key={i}>{renderMath(part)}</strong>
+            )}
+          </span>
+        );
+      }
+      return element;
+    };
+  
     const paragraphs = content.split('\n\n');
-    
+  
     return paragraphs.map((paragraph, index) => {
       const lines = paragraph.split('\n');
       const formattedLines = lines.map((line, lineIndex) => (
-        <React.Fragment key={lineIndex}>
-          {formatLine(line)}
+        <React.Fragment key={`${index}-${lineIndex}`}>
+          {renderElement(line, lineIndex)}
           {lineIndex < lines.length - 1 && <br />}
         </React.Fragment>
       ));
-
-      return (
-        <p key={index} className="mb-4">
-          {formattedLines}
-        </p>
-      );
+  
+      return <p key={index} className="mb-4">{formattedLines}</p>;
     });
   };
+
+  if (isLoading && isInitialLoad) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white">
+        <div className="w-16 h-16 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
+        <p className="mt-4 text-xl">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen bg-black text-white">
       <Header />
-      <div className="flex-grow flex overflow-hidden pt-16 pb-10 md:pt-24">
+      <div className="flex flex-grow overflow-hidden pt-16 pb-10 md:pt-24">
         <button
           ref={toggleButtonRef}
           className="md:hidden fixed top-20 left-0 z-20 p-2 bg-yellow-600 rounded-md shadow-lg"
@@ -289,7 +345,7 @@ function Chatbot() {
           ))}
         </aside>
 
-        <main className="flex-grow overflow-auto p-4 pb-20">
+        <main className="flex-grow overflow-y-auto p-4 pb-36">
           <div className="max-w-3xl mx-auto">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full">
@@ -299,7 +355,7 @@ function Chatbot() {
                   {sampleQuestions.map((question, index) => (
                     <button
                       key={index}
-                      onClick={handleSubmit}
+                      onClick={(e) => handleSubmit(e, question)}
                       className="w-full p-2 text-left bg-gray-800 hover:bg-gray-700 rounded transition duration-300"
                     >
                       {question}
@@ -327,22 +383,34 @@ function Chatbot() {
       </div>
 
       <footer className="fixed bottom-14 left-0 right-0 p-1.5 border-t border-gray-800 bg-black">
-        <form onSubmit={handleSubmit} className="max-w-3xl mx-auto flex">
-          <input
-            type="text"
+        <form onSubmit={handleSubmit} className="max-w-3xl mx-auto relative">
+          <Textarea
+            ref={textareaRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            className="flex-grow p-2 rounded-l bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500"
+            onChange={handleInputChange}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmit(e);
+              }
+            }}
+            className="w-full p-2 pr-12 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500 resize-none overflow-y-auto"
             placeholder="Type your message here..."
             disabled={loading}
+            rows={1}
+            style={{ minHeight: '50px', maxHeight: '100px' }}
           />
-          <button 
+          <Button 
             type="submit" 
-            className="p-1.5 bg-blue-600 text-white rounded-r font-bold hover:bg-blue-700 transition duration-300"
+            className="absolute p-2 right-2.5 md:right-8 items-center  bottom-1  bg-blue-600 text-white rounded-md font-bold hover:bg-blue-700 transition duration-300 flex-shrink-0"
             disabled={loading}
           >
-            {loading ? 'Sending...' : 'Send'}
-          </button>
+            {loading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <FiSend className='w-5 h-5'/>
+            )}
+          </Button>
         </form>
       </footer>
 
