@@ -31,7 +31,7 @@ const TopUpPage = () => {
   return (
     <div className="min-h-screen flex flex-col bg-black text-white">
       <Header />
-      <main className="flex-grow flex flex-col items-center justify-center pt-20 md:pt-24 p-4">
+      <main className="flex-grow flex flex-col items-center justify-center p-4">
         <div className="w-full max-w-md">
           <h1 className="text-3xl font-bold mb-6 text-center">Top Up 🤑</h1>
           <form onSubmit={handleSubmit} className="bg-gray-900 rounded-lg shadow-lg p-6">

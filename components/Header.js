@@ -8,9 +8,9 @@ const Header = () => {
     const [state, setState] = useState(false);
 
     const navigation = [
-        { title: "Chatty", path: "/chatbot" },
-        { title: "Quizzy", path: "/quiz" },
-        { title: "PDF Generator", path: "/" },
+        { title: "CroxxChat", path: "/chatbot" },
+        { title: "CroxxQuiz", path: "/quiz" },
+        { title: "CroxxDoc-Chat", path: "/" },
     ];
 
     useEffect(() => {
