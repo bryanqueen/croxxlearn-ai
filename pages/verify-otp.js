@@ -66,7 +66,7 @@ export default function VerifyOTP() {
             </button>
           </form>
           <p className="mt-4 text-center">
-            Didn't receive OTP? <Link href="/forgot-password" className="text-blue-500 hover:underline">Resend</Link>
+            Didn&apos;t receive OTP? <Link href="/forgot-password" className="text-blue-500 hover:underline">Resend</Link>
           </p>
         </div>
       </main>
