@@ -31,7 +31,9 @@ export default async function handler(req, res) {
     const userData = {
       name: user.name,
       credits: user.credits || 0,
-      referralCode: user.referralCode
+      referralCode: user.referralCode,
+      institution: user.institution,
+      email: user.email
     };
 
     res.status(200).json(userData);

@@ -8,9 +8,9 @@ const Header = () => {
     const [state, setState] = useState(false);
 
     const navigation = [
-        { title: "CroxxChat", path: "/chatbot" },
-        { title: "CroxxQuiz", path: "/quiz" },
-        { title: "CroxxDoc-Chat", path: "/" },
+        { title: "Chat", path: "/chatbot" },
+        { title: "Quiz", path: "/quiz" },
+        { title: "Doc-Chat", path: "/" },
     ];
 
     useEffect(() => {
@@ -56,9 +56,9 @@ const Header = () => {
                     </div>
                 </div>
                 <div className={`flex-1 items-center md:flex border-white ${state ? 'block' : 'hidden'} `}>
-                    <ul className="justify-center md:pl-64 flex md:flex-row flex-col b gap-3">
+                    <ul className="justify-center md:pl-64 flex md:flex-row flex-col gap-3">
                         {navigation.map((item, idx) => (
-                            <li key={idx} className="text-white hover:text-gray-200">
+                            <li key={idx} className="text-white hover:underline text-lg">
                                 <a href={item.path} className="block">
                                     {item.title}
                                 </a>

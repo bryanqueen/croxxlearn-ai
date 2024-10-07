@@ -9,17 +9,16 @@ export default async function handler(req, res) {
 
   await dbConnect();
 
-  const { email, otp, newPassword } = req.body;
+  const { email, newPassword } = req.body;
 
   try {
     const user = await User.findOne({ 
       email, 
-      resetPasswordOTP: otp,
       resetPasswordOTPExpires: { $gt: Date.now() }
     });
 
     if (!user) {
-      return res.status(400).json({ message: 'Invalid or expired OTP' });
+      return res.status(400).json({ message: 'Invalid or expired reset request' });
     }
 
     // Hash new password

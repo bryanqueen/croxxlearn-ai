@@ -13,7 +13,7 @@ const inter = Inter({ subsets: ["latin"] });
 const Features = [
   {
     name: 'Chatty',
-    desc: 'Ask questions and get help with your homework tasks.',
+    desc: 'Ask questions and get up to speed in any academic area.',
     image: TaskHelper,
     path: '/chatbot'
   },
@@ -25,28 +25,36 @@ const Features = [
   },
   {
     name: 'Docky',
-    desc: 'Generate detailed PDF handbooks for better understanding.',
+    desc: 'Upload your academic documents, get summarizations and chat with your document.',
     image: PdfGenerator,
     path: '/'
   }
-]
-const items = ['AI', 'WILL', 'REPLACE', 'YOUR', 'TUTORS', '✨']
+];
+
+const items = ['AI', 'WILL', 'REPLACE', 'YOUR', 'TUTORS', '✨'];
 
 const Home = () => (
-  <div className={`min-h-screen flex flex-col ${inter.className}`}>
-    <Hero/>
-    <main className="flex-grow bg-black p-4 pb-20 items-center w-full">
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:px-6">
-        {Features.map((feature, index) => (
-          <FeatureCard key={index} name={feature.name} desc={feature.desc} path={feature.path} img={feature.image}/>
-        ))}
+  <div className={`min-h-screen flex flex-col ${inter.className} bg-black`}>
+    <Hero />
+    <main className="flex-grow px-4 py-8">
+      <div className="container mx-auto">
+        <h2 className="text-4xl font-bold text-white text-center mb-12">Our Features</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-6 px-2 md:px-6 lg:py-20">
+          {Features.map((feature, index) => (
+            <FeatureCard 
+              key={index} 
+              name={feature.name} 
+              desc={feature.desc} 
+              path={feature.path} 
+              img={feature.image}
+            />
+          ))}
+        </div>
       </div>
     </main>
-    <Marquee items={items}/>
+    <Marquee items={items} />
     <Footer />
   </div>
 );
 
 export default Home;
-
