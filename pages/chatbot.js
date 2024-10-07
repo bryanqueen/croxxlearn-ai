@@ -219,19 +219,15 @@ function Chatbot({chat}) {
 
   const formatAIResponse = (content) => {
     const renderMath = (text) => {
-      // Regular expression to match LaTeX-style math expressions
       const mathRegex = /\\$$(.*?)\\$$|\\\[(.*?)\\\]/gs;
       const parts = text.split(mathRegex);
   
       return parts.map((part, index) => {
         if (index % 3 === 1) {
-          // Inline math
           return <InlineMath key={index} math={part} />;
         } else if (index % 3 === 2) {
-          // Display (block) math
           return <BlockMath key={index} math={part} />;
         }
-        // Regular text
         return part;
       });
     };
@@ -269,6 +265,19 @@ function Chatbot({chat}) {
   
       return <p key={index} className="mb-4">{formattedLines}</p>;
     });
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      if (e.shiftKey) {
+        // Shift+Enter: add a new line
+        setInput(prevInput => prevInput + '\n');
+      } else {
+        // Enter without shift: submit the form
+        e.preventDefault();
+        handleSubmit(e);
+      }
+    }
   };
 
   if (isLoading && isInitialLoad) {
@@ -382,18 +391,13 @@ function Chatbot({chat}) {
         </main>
       </div>
 
-      <footer className="fixed bottom-14 left-0 right-0 p-1.5 border-t border-gray-800 bg-black">
+      <footer className="fixed bottom-14 left-0 right-0 p-1.5 border-t border-gray-800  bg-black">
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto relative">
           <Textarea
             ref={textareaRef}
             value={input}
             onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSubmit(e);
-              }
-            }}
+            onKeyDown={handleKeyDown}
             className="w-full p-2 pr-12 rounded bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-blue-500 resize-none overflow-y-auto"
             placeholder="Type your message here..."
             disabled={loading}
@@ -402,7 +406,7 @@ function Chatbot({chat}) {
           />
           <Button 
             type="submit" 
-            className="absolute p-2 right-2.5 md:right-8 items-center  bottom-1  bg-blue-600 text-white rounded-md font-bold hover:bg-blue-700 transition duration-300 flex-shrink-0"
+            className="absolute p-2 right-2.5 md:right-8 items-center bottom-1 bg-blue-600 text-white rounded-md font-bold hover:bg-blue-700 transition duration-300 flex-shrink-0"
             disabled={loading}
           >
             {loading ? (
@@ -439,5 +443,3 @@ function Chatbot({chat}) {
 }
 
 export default Chatbot;
-
-// export function

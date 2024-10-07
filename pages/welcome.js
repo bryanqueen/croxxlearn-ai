@@ -112,13 +112,13 @@ const WelcomePage = () => {
               <span className="text-md md:text-lg">Your Available Credit:</span>
               <span className="text-xl font-bold md:text-2xl">{user.credits} $croxx</span>
             </div>
-            <button
+            {/* <button
               onClick={() => router.push('/top-up')}
               className="mt-4 flex items-center justify-center w-full bg-white text-blue-600 font-semibold py-2 px-4 rounded-lg hover:bg-gray-100 transition-colors duration-300"
             >
               <FaCoins className="mr-2" />
               Top Up Credits
-            </button>
+            </button> */}
           </div>
           
           {/*Referral Section */}
