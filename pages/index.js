@@ -38,8 +38,8 @@ const Home = () => (
     <Hero />
     <main className="flex-grow px-4 py-8">
       <div className="container mx-auto">
-        <h2 className="text-4xl font-bold text-white text-center mb-12">Our Features</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-6 px-2 md:px-6 lg:py-20">
+        <h2 className="text-4xl font-bold text-white text-center ">Our Features</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-6 px-2 md:px-6 py-10">
           {Features.map((feature, index) => (
             <FeatureCard 
               key={index} 
