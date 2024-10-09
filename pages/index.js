@@ -12,19 +12,19 @@ const inter = Inter({ subsets: ["latin"] });
 
 const Features = [
   {
-    name: 'Chatty',
+    name: 'AI Chat',
     desc: 'Ask questions and get up to speed in any academic area.',
     image: TaskHelper,
     path: '/chatbot'
   },
   {
-    name: 'Quizzy',
+    name: 'Quiz',
     desc: 'Generate quizzes for practice on any topic you choose.',
     image: QuizGenerator,
     path: '/quiz'
   },
   {
-    name: 'Docky',
+    name: 'Doc-Chat',
     desc: 'Upload your academic documents, get summarizations and chat with your document.',
     image: PdfGenerator,
     path: '/'
