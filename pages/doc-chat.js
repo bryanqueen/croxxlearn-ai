@@ -292,7 +292,7 @@ function DocChat() {
         </main>
       </div>
 
-      <footer className="absolute bottom-14 md:bottom-14 left-0 right-0 p-2 bg-gray-800 shadow-md">
+      <footer className="fixed bottom-14 md:bottom-14 left-0 right-0 p-2 bg-gray-800 shadow-md">
         <form onSubmit={handleSubmit} className="max-w-3xl mx-auto relative">
           <Textarea
             value={input}
