@@ -10,7 +10,7 @@ const Header = () => {
     const navigation = [
         { title: "Chat", path: "/chatbot" },
         { title: "Quiz", path: "/quiz" },
-        { title: "Doc-Chat", path: "/" },
+        { title: "Doc-Chat", path: "/doc-chat" },
     ];
 
     useEffect(() => {

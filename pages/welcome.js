@@ -97,7 +97,7 @@ const WelcomePage = () => {
   const navigationButtons = [
     { label: 'Try CroxxChat', icon: '🤖', route: '/chatbot' },
     { label: 'Try CroxxQuiz', icon: '📝', route: '/quiz' },
-    { label: 'Try CroxxDoc-Chat', icon: '📄', route: '/pdf-generator' },
+    { label: 'Try CroxxDoc-Chat', icon: '📄', route: '/doc-chat' },
   ];
 
   return (
