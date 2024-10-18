@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-function DocChat() {
+export default function DocChat() {
   const [documents, setDocuments] = useState([]);
   const [currentDocId, setCurrentDocId] = useState(null);
   const [summaries, setSummaries] = useState([]);
@@ -24,15 +24,34 @@ function DocChat() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [docToDelete, setDocToDelete] = useState(null);
   const [activeTab, setActiveTab] = useState('summaries');
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-//   const [userCredits, setUserCredits] = useState(0);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isSummariesLoading, setIsSummariesLoading] = useState(false); // Added summaries loading state
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const sidebarRef = useRef(null);
+  const toggleButtonRef = useRef(null);
   const router = useRouter();
 
   useEffect(() => {
     fetchDocuments();
-  }, []);
+
+    const handleClickOutside = (event) => {
+      if (
+        sidebarRef.current && 
+        !sidebarRef.current.contains(event.target) && 
+        !toggleButtonRef.current.contains(event.target) && 
+        sidebarOpen
+      ) {
+        setSidebarOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [sidebarOpen, router.query.id]);
 
   useEffect(() => {
     scrollToBottom();
@@ -53,18 +72,32 @@ function DocChat() {
       if (response.ok) {
         const fetchedDocs = await response.json();
         setDocuments(fetchedDocs);
-        if (fetchedDocs.length > 0 && !currentDocId) {
-          setCurrentDocId(fetchedDocs[0]._id);
-          setSummaries(fetchedDocs[0].summaries);
-          setMessages(fetchedDocs[0].messages);
+        
+        const urlDocId = router.query.id;
+        if (urlDocId) {
+          const currentDoc = fetchedDocs.find(doc => doc._id === urlDocId);
+          if (currentDoc) {
+            setCurrentDocId(currentDoc._id);
+            setSummaries(currentDoc.summaries);
+            setMessages(currentDoc.messages || []);
+          } else {
+            setCurrentDocId(null);
+            setSummaries([]);
+            setMessages([]);
+          }
+        } else {
+          setCurrentDocId(null);
+          setSummaries([]);
+          setMessages([]);
         }
       }
     } catch (error) {
       console.error('Error fetching documents:', error);
       setError('Failed to fetch documents');
+    } finally {
+      setIsInitialLoading(false);
     }
   };
-
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
@@ -72,6 +105,7 @@ function DocChat() {
 
     setIsUploading(true);
     setError('');
+    setIsSummariesLoading(true); // Added: Set summaries loading to true
 
     const formData = new FormData();
     formData.append('file', file);
@@ -95,11 +129,13 @@ function DocChat() {
       setCurrentDocId(result.document._id);
       setSummaries(result.document.summaries);
       setMessages([]);
+      router.push(`/doc-chat?id=${result.document._id}`, undefined, { shallow: true });
     } catch (error) {
       console.error('Error uploading file:', error);
       setError('Failed to upload file');
     } finally {
       setIsUploading(false);
+      setIsSummariesLoading(false); // Added: Set summaries loading to false
     }
   };
 
@@ -142,11 +178,11 @@ function DocChat() {
   };
 
   const handleNewDocChat = () => {
-    // Logic for starting a new doc-chat
     setCurrentDocId(null);
     setSummaries([]);
     setMessages([]);
     setActiveTab('summaries');
+    router.push('/doc-chat', undefined, { shallow: true });
   };
 
   const handleDeleteDoc = async () => {
@@ -167,6 +203,7 @@ function DocChat() {
           setCurrentDocId(null);
           setSummaries([]);
           setMessages([]);
+          router.push('/doc-chat', undefined, { shallow: true });
         }
       } else {
         setError('Failed to delete document');
@@ -185,7 +222,7 @@ function DocChat() {
       <FiUpload className="h-16 w-16 mb-4 text-gray-400" />
       <h2 className="text-2xl font-bold mb-2">Upload a document to get started</h2>
       <p className="text-gray-400 mb-4">
-        Upload your documents and our AI will generate summaries to help you quickly understand the content.
+        Feed me your documents (pdf, doc, docx, text) and i will generate summaries to help you quickly understand it, then ask questions on what you are not clear on.
       </p>
       <Button
         onClick={() => fileInputRef.current.click()}
@@ -196,24 +233,28 @@ function DocChat() {
     </div>
   );
 
+  if (isInitialLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-black">
+        <Loader2 className="h-16 w-16 animate-spin text-blue-500" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-screen bg-black text-white">
       <Header />
       <div className="flex flex-grow overflow-hidden pt-16 pb-16 md:pt-24 md:pb-0">
-      <button
-          className="md:hidden fixed top-20 right-4 z-20 pt-3 bg-gray-800 rounded-md"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-        >
-          <FiMenu className="h-6 w-6" />
-        </button>
-        <aside className={`fixed inset-y-0 left-0 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition duration-200 ease-in-out md:w-64 bg-gray-800 p-4 overflow-y-auto shadow-md mt-16 md:mt-0 md:mb-32 z-10`}>
+        <aside
+          ref={sidebarRef}
+          className={`fixed w-64 inset-y-0 left-0 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition duration-200 ease-in-out md:w-64 bg-gray-800 p-4 overflow-y-auto shadow-md mt-16 md:mt-0 md:mb-32 z-10`}>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">Documents</h2>
             <Button
-            onClick={() => handleNewDocChat()}
-            className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition duration-300"
+              onClick={handleNewDocChat}
+              className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition duration-300"
             >
-            <FiPlus className="h-5 w-5" />
+              <FiPlus className="h-5 w-5" />
             </Button>
           </div>
           <input
@@ -235,6 +276,7 @@ function DocChat() {
                   setCurrentDocId(doc._id);
                   setSummaries(doc.summaries);
                   setMessages(doc.messages || []);
+                  router.push(`/doc-chat?id=${doc._id}`, undefined, { shallow: true });
                 }}
                 className="flex-grow truncate"
               >
@@ -259,13 +301,20 @@ function DocChat() {
             <TabsList className="px-4 py-6 items-center bg-gray-800 border-b">
               <TabsTrigger value="chat">Chat</TabsTrigger>
               <TabsTrigger value="summaries">Summaries</TabsTrigger>
+              <button
+                ref={toggleButtonRef}
+                className="md:hidden right-4 absolute p-2 bg-yellow-600 rounded-md shadow-lg"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+              >
+                <CiCircleChevRight className={`transition-transform text-black duration-300 ${sidebarOpen ? 'rotate-180' : ''}`} />
+              </button>
             </TabsList>
             <TabsContent value="chat" className="flex-grow overflow-y-auto p-4 pb-32">
               <div className="max-w-3xl mx-auto">
                 {messages.map((message, index) => (
                   <div key={index} className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
                     <div className={`inline-block p-3 rounded-lg ${
-                      message.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-900'
+                      message.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-800'
                     }`}>
                       {message.content}
                     </div>
@@ -274,19 +323,23 @@ function DocChat() {
                 <div ref={messagesEndRef} />
               </div>
             </TabsContent>
-            <TabsContent value="summaries" className="flex-grow overflow-y-auto p-4">
-            <div className="max-w-3xl mx-auto">
-                {summaries.length > 0 ? (
-                summaries.map((summary, index) => (
+            <TabsContent value="summaries" className="flex-grow overflow-y-auto p-4 pb-32">
+              <div className="max-w-3xl mx-auto">
+                {isSummariesLoading ? ( // Updated to show loader while loading summaries
+                  <div className="flex justify-center items-center h-full">
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                  </div>
+                ) : summaries.length > 0 ? (
+                  summaries.map((summary, index) => (
                     <div key={index} className="mb-4 p-4 bg-gray-800 rounded-lg">
-                    <h3 className="font-semibold mb-2">{summary.title}</h3>
-                    <p>{summary.content}</p>
+                      <h3 className="font-semibold mb-2">{summary.title}</h3>
+                      <p>{summary.content}</p>
                     </div>
-                ))
+                  ))
                 ) : (
-                <EmptySummariesState />
+                  <EmptySummariesState />
                 )}
-            </div>
+              </div>
             </TabsContent>
           </Tabs>
         </main>
@@ -324,7 +377,7 @@ function DocChat() {
           <DialogHeader>
             <DialogTitle>Delete Document</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this document? This action cannot be undone.
+              Are you sure you want to delete this document? This action cannot be  undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -347,5 +400,3 @@ function DocChat() {
     </div>
   );
 }
-
-export default DocChat;

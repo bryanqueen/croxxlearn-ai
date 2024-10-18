@@ -50,7 +50,7 @@ function Chatbot({chat}) {
   useEffect(() => {
     fetchChats();
 
-    const handleClickOutside = (event) => {
+  const handleClickOutside = (event) => {
       if (
         sidebarRef.current && 
         !sidebarRef.current.contains(event.target) && 
@@ -65,7 +65,7 @@ function Chatbot({chat}) {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [sidebarOpen]);
+  }, [sidebarOpen, router.query.id]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;
@@ -91,9 +91,23 @@ function Chatbot({chat}) {
       if (response.ok) {
         const fetchedChats = await response.json();
         setChats(fetchedChats);
-        if (fetchedChats.length > 0 && !currentChatId) {
-          setCurrentChatId(fetchedChats[0]._id);
-          setMessages(fetchedChats[0].messages);
+        
+        // Check if there's an ID in the URL
+        const urlChatId = router.query.id;
+        if (urlChatId) {
+          const currentChat = fetchedChats.find(chat => chat._id === urlChatId);
+          if (currentChat) {
+            setCurrentChatId(currentChat._id);
+            setMessages(currentChat.messages || []);
+          } else {
+            // If the ID in the URL doesn't match any chat, clear messages and currentChatId
+            setCurrentChatId(null);
+            setMessages([]);
+          }
+        } else {
+          // If there's no ID in the URL, clear messages and currentChatId
+          setCurrentChatId(null);
+          setMessages([]);
         }
       }
     } catch (error) {
@@ -283,8 +297,8 @@ function Chatbot({chat}) {
   if (isLoading && isInitialLoad) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white">
-        <div className="w-16 h-16 border-t-4 border-blue-500 border-solid rounded-full animate-spin"></div>
-        <p className="mt-4 text-xl">Loading...</p>
+        <Loader2 className="w-16 h-16 text-blue-500 animate-spin"/>
+        {/* <p className="mt-4 text-xl">Loading...</p> */}
       </div>
     );
   }
@@ -356,7 +370,7 @@ function Chatbot({chat}) {
 
         <main className="flex-grow overflow-y-auto p-4 pb-36">
           <div className="max-w-3xl mx-auto">
-            {messages.length === 0 ? (
+            {!currentChatId ? (
               <div className="flex flex-col items-center justify-center h-full">
                 <h2 className="text-3xl font-bold text-blue-400">CroxxChat</h2>
                 <p className='mb-4 font-bold text-center text-gray-300'>Chat me about any of your academic topics😉</p>
@@ -378,10 +392,10 @@ function Chatbot({chat}) {
                   <div className={`inline-block p-3 rounded-lg ${
                     message.role === 'user' ? 'bg-blue-600' : 'bg-gray-800'
                   }`}>
-                  {message.role === 'assistant' 
-                ? formatAIResponse(message.content)
-                : message.content
-              }
+                    {message.role === 'assistant' 
+                      ? formatAIResponse(message.content)
+                      : message.content
+                    }
                   </div>
                 </div>
               ))
