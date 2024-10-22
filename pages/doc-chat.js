@@ -11,6 +11,8 @@ import BottomNavbar from '@/components/BottomNavbar';
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { InlineMath, BlockMath } from 'react-katex';
+import 'katex/dist/katex.min.css';
 
 export default function DocChat() {
   const [documents, setDocuments] = useState([]);
@@ -217,6 +219,56 @@ export default function DocChat() {
     }
   };
 
+  const formatAIResponse = (content) => {
+    const renderMath = (text) => {
+      const mathRegex = /\\$$(.*?)\\$$|\\\[(.*?)\\\]/gs;
+      const parts = text.split(mathRegex);
+  
+      return parts.map((part, index) => {
+        if (index % 3 === 1) {
+          return <InlineMath key={index} math={part} />;
+        } else if (index % 3 === 2) {
+          return <BlockMath key={index} math={part} />;
+        }
+        return part;
+      });
+    };
+  
+    const renderElement = (element, index) => {
+      if (typeof element === 'string') {
+        if (element.startsWith('### ')) {
+          return <h3 key={index} className="text-xl font-bold mt-4 mb-2">{element.slice(4)}</h3>;
+        }
+        
+        const boldRegex = /\*\*(.*?)\*\*/g;
+        const parts = element.split(boldRegex);
+        
+        return (
+          <span key={index}>
+            {parts.map((part, i) => 
+              i % 2 === 0 ? renderMath(part) : <strong key={i}>{renderMath(part)}</strong>
+            )}
+          </span>
+        );
+      }
+      return element;
+    };
+  
+    const paragraphs = content.split('\n\n');
+  
+    return paragraphs.map((paragraph, index) => {
+      const lines = paragraph.split('\n');
+      const formattedLines = lines.map((line, lineIndex) => (
+        <React.Fragment key={`${index}-${lineIndex}`}>
+          {renderElement(line, lineIndex)}
+          {lineIndex < lines.length - 1 && <br />}
+        </React.Fragment>
+      ));
+  
+      return <p key={index} className="mb-4">{formattedLines}</p>;
+    });
+  };
+
   const EmptySummariesState = () => (
     <div className="flex flex-col items-center justify-center h-full text-center p-4">
       <FiUpload className="h-16 w-16 mb-4 text-gray-400" />
@@ -316,7 +368,10 @@ export default function DocChat() {
                     <div className={`inline-block p-3 rounded-lg ${
                       message.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-800'
                     }`}>
-                      {message.content}
+                      {message.role === 'assistant' 
+                        ? formatAIResponse(message.content)
+                        : message.content
+                      }
                     </div>
                   </div>
                 ))}
@@ -325,7 +380,7 @@ export default function DocChat() {
             </TabsContent>
             <TabsContent value="summaries" className="flex-grow overflow-y-auto p-4 pb-32">
               <div className="max-w-3xl mx-auto">
-                {isSummariesLoading ? ( // Updated to show loader while loading summaries
+                {isSummariesLoading ? (
                   <div className="flex justify-center items-center h-full">
                     <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
                   </div>
@@ -333,7 +388,7 @@ export default function DocChat() {
                   summaries.map((summary, index) => (
                     <div key={index} className="mb-4 p-4 bg-gray-800 rounded-lg">
                       <h3 className="font-semibold mb-2">{summary.title}</h3>
-                      <p>{summary.content}</p>
+                      {formatAIResponse(summary.content)}
                     </div>
                   ))
                 ) : (
