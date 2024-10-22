@@ -65,6 +65,7 @@ export default async function handler(req, res) {
       userId: user._id,
       title: file.originalFilename,
       fileUrl: fileUrl,
+      fullText: processedContent,
       summaries: summaries,
     });
 
