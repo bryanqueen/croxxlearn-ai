@@ -2,6 +2,9 @@
     "functions": {
       "pages/api/quiz.js": {
         "maxDuration": 60
+      },
+      "pages/api/doc-chat/upload.js": {
+        "maxDuration" : 60
       }
     }
   }
