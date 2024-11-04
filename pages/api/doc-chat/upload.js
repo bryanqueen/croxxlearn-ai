@@ -1,4 +1,3 @@
-
 import { verifyToken } from '@/lib/auth';
 import connectMongo from '@/lib/mongodb';
 import DocChat from '@/model/DocChat';
@@ -6,6 +5,7 @@ import User from '@/model/User';
 import { processDocument, generateSummaries } from '@/lib/documentProcessor';
 import { IncomingForm } from 'formidable';
 import fs from 'fs/promises';
+import { countPages } from '@/lib/documentProcessor';
 
 export const config = {
   api: {
@@ -36,6 +36,7 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: 'Insufficient credits' });
     }
 
+
     const form = new IncomingForm({
       keepExtensions: true,
       multiples: false,
@@ -57,6 +58,11 @@ export default async function handler(req, res) {
     const processedContent = await processDocument(file, fileContent);
     const summaries = await generateSummaries(processedContent);
 
+    const MAX_PAGES = 50;
+    const pageCount = await countPages(fileContent, file.originalFilename);
+    if (pageCount > MAX_PAGES) {
+      return res.status(400).json({ error: `Document exceeds the maximum page limit of ${MAX_PAGES}` });
+    }
     // Here you would typically save the file to a permanent storage
     // For now, we'll just use the temporary path
     const fileUrl = file.filepath;

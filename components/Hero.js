@@ -40,7 +40,7 @@ export function Hero() {
           transition={{ duration: 0.5 }}
         >
           <Button
-            onClick={() => router.push('/login')}
+            onClick={() => router.push('/get-started')}
             className='bg-white text-lg text-black w-full p-6 rounded-full font-semibold hover:bg-slate-200'
           >
             Get started

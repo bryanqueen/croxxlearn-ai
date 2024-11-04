@@ -13,6 +13,18 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InlineMath, BlockMath } from 'react-katex';
 import 'katex/dist/katex.min.css';
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { motion, AnimatePresence } from 'framer-motion';
+
+// const MAX_PAGES = 50;
+const LOADING_MESSAGES = [
+  "We're studying your file so you don't have to do the hard work...",
+  "Be patient, let us cook...",
+  "Analyzing your document with the power of AI...",
+  "Extracting knowledge from your file...",
+  "Preparing insightful summaries just for you...",
+];
 
 export default function DocChat() {
   const [documents, setDocuments] = useState([]);
@@ -28,7 +40,9 @@ export default function DocChat() {
   const [activeTab, setActiveTab] = useState('summaries');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [isSummariesLoading, setIsSummariesLoading] = useState(false); // Added summaries loading state
+  const [isSummariesLoading, setIsSummariesLoading] = useState(false);
+  const [summaryType, setSummaryType] = useState('long-form');
+  const [loadingMessage, setLoadingMessage] = useState('');
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
   const sidebarRef = useRef(null);
@@ -58,6 +72,15 @@ export default function DocChat() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    if (isSummariesLoading) {
+      const interval = setInterval(() => {
+        setLoadingMessage(LOADING_MESSAGES[Math.floor(Math.random() * LOADING_MESSAGES.length)]);
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [isSummariesLoading]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -107,7 +130,8 @@ export default function DocChat() {
 
     setIsUploading(true);
     setError('');
-    setIsSummariesLoading(true); // Added: Set summaries loading to true
+    setIsSummariesLoading(true);
+    setLoadingMessage(LOADING_MESSAGES[0]);
 
     const formData = new FormData();
     formData.append('file', file);
@@ -123,7 +147,8 @@ export default function DocChat() {
       });
 
       if (!response.ok) {
-        throw new Error('File upload failed');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'File upload failed');
       }
 
       const result = await response.json();
@@ -134,10 +159,10 @@ export default function DocChat() {
       router.push(`/doc-chat?id=${result.document._id}`, undefined, { shallow: true });
     } catch (error) {
       console.error('Error uploading file:', error);
-      setError('Failed to upload file');
+      setError(error.message || 'Failed to upload file');
     } finally {
       setIsUploading(false);
-      setIsSummariesLoading(false); // Added: Set summaries loading to false
+      setIsSummariesLoading(false);
     }
   };
 
@@ -179,44 +204,8 @@ export default function DocChat() {
     }
   };
 
-  const handleNewDocChat = () => {
-    setCurrentDocId(null);
-    setSummaries([]);
-    setMessages([]);
-    setActiveTab('summaries');
-    router.push('/doc-chat', undefined, { shallow: true });
-  };
-
-  const handleDeleteDoc = async () => {
-    if (!docToDelete) return;
-
-    try {
-      const token = Cookies.get('authToken');
-      const response = await fetch(`/api/doc-chat/${docToDelete}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        setDocuments(prev => prev.filter(doc => doc._id !== docToDelete));
-        if (currentDocId === docToDelete) {
-          setCurrentDocId(null);
-          setSummaries([]);
-          setMessages([]);
-          router.push('/doc-chat', undefined, { shallow: true });
-        }
-      } else {
-        setError('Failed to delete document');
-      }
-    } catch (error) {
-      console.error('Error deleting document:', error);
-      setError('Failed to delete document');
-    } finally {
-      setDeleteModalOpen(false);
-      setDocToDelete(null);
-    }
+  const handleSummaryTypeChange = (checked) => {
+    setSummaryType(checked ? 'key-points' : 'long-form');
   };
 
   const formatAIResponse = (content) => {
@@ -269,12 +258,68 @@ export default function DocChat() {
     });
   };
 
+  const renderSummary = (summary) => {
+    if (summaryType === 'key-points' && summary.keyPoints && summary.keyPoints.length > 0) {
+      return (
+        <ul className="list-disc pl-5 space-y-2">
+          {summary.keyPoints.map((point, index) => (
+            <li key={index}>{formatAIResponse(point)}</li>
+          ))}
+        </ul>
+      );
+    } else if (summaryType === 'key-points') {
+      return <p>No key points available for this summary.</p>;
+    } else {
+      return formatAIResponse(summary.content);
+    }
+  };
+
+  const handleNewDocChat = () => {
+    setCurrentDocId(null);
+    setSummaries([]);
+    setMessages([]);
+    setActiveTab('summaries');
+    router.push('/doc-chat', undefined, { shallow: true });
+  };
+
+  const handleDeleteDoc = async () => {
+    if (!docToDelete) return;
+
+    try {
+      const token = Cookies.get('authToken');
+      const response = await fetch(`/api/doc-chat/${docToDelete}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        setDocuments(prev => prev.filter(doc => doc._id !== docToDelete));
+        if (currentDocId === docToDelete) {
+          setCurrentDocId(null);
+          setSummaries([]);
+          setMessages([]);
+          router.push('/doc-chat', undefined, { shallow: true });
+        }
+      } else {
+        setError('Failed to delete document');
+      }
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      setError('Failed to delete document');
+    } finally {
+      setDeleteModalOpen(false);
+      setDocToDelete(null);
+    }
+  };
+
   const EmptySummariesState = () => (
     <div className="flex flex-col items-center justify-center h-full text-center p-4">
       <FiUpload className="h-16 w-16 mb-4 text-gray-400" />
       <h2 className="text-2xl font-bold mb-2">Upload a document to get started</h2>
       <p className="text-gray-400 mb-4">
-        Feed me your documents (pdf, doc, docx, text) and i will generate summaries to help you quickly understand it, then ask questions on what you are not clear on.
+        Feed me your documents (pdf, doc, docx, text) and I will generate summaries to help you quickly understand it, then ask questions on what you are not clear on.
       </p>
       <Button
         onClick={() => fileInputRef.current.click()}
@@ -340,7 +385,7 @@ export default function DocChat() {
                   setDocToDelete(doc._id);
                   setDeleteModalOpen(true);
                 }}
-                className="p-1 text-gray-400 hover:text-red-500 transition duration-300"
+                className="p-1 text-gray-400  hover:text-red-500 transition duration-300"
               >
                 <FiTrash2 />
               </button>
@@ -353,6 +398,14 @@ export default function DocChat() {
             <TabsList className="px-4 py-6 items-center bg-gray-800 border-b">
               <TabsTrigger value="chat">Chat</TabsTrigger>
               <TabsTrigger value="summaries">Summaries</TabsTrigger>
+              <div className="flex items-center space-x-2 ml-auto">
+                <Switch
+                  id="summary-type"
+                  checked={summaryType === 'key-points'}
+                  onCheckedChange={handleSummaryTypeChange}
+                />
+                <Label htmlFor="summary-type" className='pr-10'>Key Points</Label>
+              </div>
               <button
                 ref={toggleButtonRef}
                 className="md:hidden right-4 absolute p-2 bg-yellow-600 rounded-md shadow-lg"
@@ -381,14 +434,26 @@ export default function DocChat() {
             <TabsContent value="summaries" className="flex-grow overflow-y-auto p-4 pb-32">
               <div className="max-w-3xl mx-auto">
                 {isSummariesLoading ? (
-                  <div className="flex justify-center items-center h-full">
-                    <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <Loader2 className="h-16 w-16 animate-spin text-blue-500 mb-8" />
+                    <AnimatePresence mode="wait">
+                      <motion.p
+                        key={loadingMessage}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.5 }}
+                        className="text-center text-gray-400 text-2xl font-bold"
+                      >
+                        {loadingMessage}
+                      </motion.p>
+                    </AnimatePresence>
                   </div>
                 ) : summaries.length > 0 ? (
                   summaries.map((summary, index) => (
                     <div key={index} className="mb-4 p-4 bg-gray-800 rounded-lg">
                       <h3 className="font-semibold mb-2">{summary.title}</h3>
-                      {formatAIResponse(summary.content)}
+                      {renderSummary(summary)}
                     </div>
                   ))
                 ) : (
@@ -432,7 +497,7 @@ export default function DocChat() {
           <DialogHeader>
             <DialogTitle>Delete Document</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this document? This action cannot be  undone.
+              Are you sure you want to delete this document? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -447,7 +512,7 @@ export default function DocChat() {
       </Dialog>
 
       {error && (
-        <Alert variant="destructive" className="fixed bottom-20 left-4 right-4">
+        <Alert variant="destructive" className="fixed bottom-20 left-4 right-4 z-50 bg-red-600 text-white">
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>

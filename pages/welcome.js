@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Header from '@/components/Header';
-import { FaUserFriends, FaCopy, FaCoins } from 'react-icons/fa'; // Import icons
+import { FaUserFriends, FaCopy, FaCoins, FaWhatsapp } from 'react-icons/fa'; // Import icons
 import toast, {Toaster} from 'react-hot-toast';
 import BottomNavbar from '@/components/BottomNavbar';
 // import { getCookie } from 'cookies-next';
@@ -142,6 +142,23 @@ const WelcomePage = () => {
                 <FaCopy />
               </button>
             </div>
+          </div>
+
+          {/* WhatsApp Channel Section */}
+            <div className="bg-green-600 rounded-lg shadow-lg p-6 mb-8">
+            <div className="flex items-center mb-4">
+              <FaWhatsapp className="text-3xl text-white mr-3" />
+              <h3 className="text-xl font-semibold">Join Our WhatsApp Channel</h3>
+            </div>
+            <p className="mb-4">Receive future updates on croxxlearn ai directly on WhatsApp!</p>
+            <a 
+              href="https://whatsapp.com/channel/0029VamQSUC3WHTPWqAUj621"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full text-center bg-white text-green-600 font-semibold py-2 px-4 rounded-lg hover:bg-gray-100 transition-colors duration-300"
+            >
+              Join Now
+            </a>
           </div>
           
           <h3 className="text-xl font-semibold mb-4">What would you like to try?</h3>
