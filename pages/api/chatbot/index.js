@@ -180,7 +180,7 @@ async function handlePostRequest(req, res) {
     await chat.save();
 
     // Deduct credits and update user
-    req.user.credits -= 0.5;
+    req.user.credits -= 2;
     await req.user.save();
 
     console.log('Stream completed');

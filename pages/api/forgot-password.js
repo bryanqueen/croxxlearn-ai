@@ -1,6 +1,6 @@
 import dbConnect from '@/lib/mongodb';
 import User from '@/model/User';
-import { sendOTP } from '@/lib/emailService';
+import { sendResetOTP } from '@/lib/emailService';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     await user.save();
 
     // Send OTP via email
-    await sendOTP(email, otp);
+    await sendResetOTP(email, otp);
 
     res.status(200).json({ message: 'OTP sent to email' });
   } catch (error) {

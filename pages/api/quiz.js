@@ -72,7 +72,7 @@ export default async function handler(req, res) {
         }
 
         // Calculate required credits
-        const creditsPerQuestion = questionType === 'multiple-choice' ? 1.5 : 3;
+        const creditsPerQuestion = questionType === 'multiple-choice' ? 5 : 5;
         const requiredCredits = numberOfQuestions * creditsPerQuestion;
 
         // Check if user has enough credits

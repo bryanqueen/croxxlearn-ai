@@ -83,7 +83,7 @@ export default async function handler(req, res) {
     await docChat.save();
 
     // Deduct credits
-    user.credits -= 1.5;
+    user.credits -= 3;
     await user.save();
 
     res.status(200).json({ message: aiResponse, updatedCredits: user.credits });

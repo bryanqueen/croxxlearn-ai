@@ -9,7 +9,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState({
     name: '',
     email: '',
-    institution: '',
+    // institution: '',
     credits: 0,
     referralCode: ''
   });
@@ -90,14 +90,14 @@ export default function ProfilePage() {
                   isEditing={isEditing}
                   onChange={handleInputChange}
                 />
-                <ProfileField
+                {/* <ProfileField
                   icon={<FaUniversity className="text-3xl text-green-400" />}
                   label="Institution"
                   value={user.institution}
                   name="institution"
                   isEditing={isEditing}
                   onChange={handleInputChange}
-                />
+                /> */}
                 <ProfileField
                   icon={<FaCoins className="text-3xl text-yellow-400" />}
                   label="Credits"

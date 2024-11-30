@@ -4,13 +4,15 @@ import { useAuth } from '@/auth/useAuth';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
+import { FcGoogle } from 'react-icons/fc';
+import toast, { Toaster } from 'react-hot-toast';
 
 const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const { login } = useAuth();
+  const { login,googleSignIn } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e) => {
@@ -38,13 +40,26 @@ const Login = () => {
       setLoading(false);
     }
   };
+  const handleGoogleSignIn = async () => {
+    try {
+      const success = await googleSignIn();
+      if (success) {
+        router.push('/welcome');
+      } else {
+        toast.error('Google sign-in failed. Please try again.');
+      }
+    } catch (error) {
+      toast.error('An error occurred during Google sign-in. Please try again.');
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-black text-white">
-      <Header/>
-      <main className="flex-grow flex flex-col items-center justify-center pt-32 p-4">
+      {/* <Header/> */}
+      <Toaster position="top-center" reverseOrder={false} />
+      <main className="flex-grow flex flex-col items-center justify-center p-4">
         <div className="w-full max-w-md">
-          <h2 className="text-2xl font-bold mb-6">Login to Croxxlearn AI</h2>
+          <h2 className="text-2xl font-bold mb-6">Welcome Back</h2>
           {error && (
             <div className="mb-4 p-3 bg-red-600 text-white rounded">
               {error}
@@ -94,6 +109,15 @@ const Login = () => {
               {loading ? 'Logging in...' : 'Login'}
             </button>
           </form>
+          <div className="mt-4">
+            <button 
+              onClick={handleGoogleSignIn}
+              className="w-full p-3 bg-white text-gray-800 rounded font-bold hover:bg-gray-100 transition duration-300 flex items-center justify-center"
+            >
+              <FcGoogle className="mr-2" size={24} />
+              continue with Google
+            </button>
+          </div>
           <p className="mt-4 text-center">
             Don&apos;t have an account? <Link href="/register" className="text-blue-500 hover:underline">Create one</Link>
           </p>

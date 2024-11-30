@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import { FaUserFriends, FaCopy, FaCoins, FaWhatsapp } from 'react-icons/fa'; // Import icons
 import toast, {Toaster} from 'react-hot-toast';
 import BottomNavbar from '@/components/BottomNavbar';
+import Link from 'next/link';
 // import { getCookie } from 'cookies-next';
 
 const WelcomePage = () => {
@@ -25,51 +26,39 @@ const WelcomePage = () => {
 
 
   useEffect(() => {
-          // Fetch real user data from the API
-          const fetchUserData = async () => {
-            try {
-              console.log('Fetching user data...');
-              console.log('All cookies:', document.cookie);
-              const token = getCookie('authToken');
-              console.log('Token from cookie:', token);
-              
-              if (!token) {
-                console.error('No token found in cookie');
-                router.push('/login');
-                return;
-              }
-          
-              console.log('Sending request to /api/user...');
-              const response = await fetch('/api/user', {
-                // headers: {
-                //   'Authorization': `Bearer ${token}`
-                // }
-                credentials: 'include'
-              });
-          
-              console.log('Response status:', response.status);
-          
-              if (response.ok) {
-                const userData = await response.json();
-                console.log('User data received:', userData);
-                setUser(userData);
-                const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
-                setReferralLink(`${baseUrl}/register?referralCode=${userData.referralCode}`);
-              } else {
-                console.error('Failed to fetch user data');
-                const errorData = await response.json();
-                console.error('Error details:', errorData);
-                if (response.status === 401) {
-                  console.error('Unauthorized access, redirecting to login');
-                  router.push('/login');
-                }
-              }
-            } catch (error) {
-              console.error('Error fetching user data:', error);
-            }
-          };
-
-          fetchUserData()
+    const fetchUserData = async () => {
+      try {
+        const token = getCookie('authToken') || localStorage.getItem('authToken');
+        
+        if (!token) {
+          router.push('/login');
+          return;
+        }
+  
+        const response = await fetch('/api/user', {
+          credentials: 'include',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+  
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+          const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+          setReferralLink(`${baseUrl}/register?referralCode=${userData.referralCode}`);
+        } else {
+          if (response.status === 401) {
+            localStorage.removeItem('authToken');
+            router.push('/login');
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
+  
+    fetchUserData();
   }, [router]);
 
   const copyReferralLink = async () => {
@@ -164,9 +153,10 @@ const WelcomePage = () => {
           <h3 className="text-xl font-semibold mb-4">What would you like to try?</h3>
           <div className="grid gap-4 pb-12">
             {navigationButtons.map((button, index) => (
-              <button
+              <Link
                 key={index}
-                onClick={() => router.push(button.route)}
+                // onClick={() => router.push(button.route)}
+                href={button.route}
                 className="flex items-center justify-between bg-gray-900 hover:bg-gray-800 transition-colors duration-300 rounded-lg p-4 shadow-md"
               >
                 <span className="flex items-center">
@@ -174,7 +164,7 @@ const WelcomePage = () => {
                   <span className="text-lg">{button.label}</span>
                 </span>
                 <span className="text-blue-400">→</span>
-              </button>
+              </Link>
             ))}
           </div>
         </div>

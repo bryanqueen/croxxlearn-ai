@@ -31,7 +31,7 @@ const Features = [
   }
 ];
 
-const items = ['AI', 'WILL', 'REPLACE', 'YOUR', 'TUTORS', '✨'];
+const items = ['THIS', 'IS', 'THE', 'FUTURE', 'OF', 'LEARNING', '✨'];
 
 const Home = () => (
   <div className={`min-h-screen flex flex-col ${inter.className} bg-black`}>
