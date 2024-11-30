@@ -17,7 +17,7 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   
   const router = useRouter();
-  const { googleSignIn } = useAuth();
+  const { continueWithGoogle } = useAuth();
 
   useEffect(() => {
     if (router.query.referralCode) {
@@ -45,16 +45,14 @@ const Register = () => {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    try {
-      const success = await googleSignIn();
-      if (success) {
-        router.push('/welcome');
-      } else {
-        toast.error('Google sign-in failed. Please try again.');
-      }
-    } catch (error) {
-      toast.error('An error occurred during Google sign-in. Please try again.');
+
+  const handleGoogleAuth = async () => {
+    const success = await continueWithGoogle();
+    if (success) {
+      router.push('/welcome');
+    } else {
+      toast.error('Google sign-in failed. Please try again.');
+      console.error('Google authentication failed');
     }
   };
 
@@ -124,7 +122,7 @@ const Register = () => {
           </form>
           <div className="mt-4">
             <button 
-              onClick={handleGoogleSignIn}
+              onClick={handleGoogleAuth}
               className="w-full p-3 bg-white text-gray-800 rounded font-bold hover:bg-gray-100 transition duration-300 flex items-center justify-center"
             >
               <FcGoogle className="mr-2" size={24} />

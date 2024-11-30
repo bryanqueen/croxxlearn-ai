@@ -71,11 +71,11 @@ export const AuthProvider = ({ children }) => {
     return false;
   };
 
-  const googleSignIn = async () => {
+  const continueWithGoogle = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
-      const response = await axios.post('/api/register', {
+      const response = await axios.post('/api/auth/google', {
         name: user.displayName,
         email: user.email,
         googleId: user.uid,
@@ -83,11 +83,12 @@ export const AuthProvider = ({ children }) => {
       if (response.data.success) {
         setIsAuthenticated(true);
         setUser(response.data.user);
+        // Store the token in a cookie
         document.cookie = `authToken=${response.data.token}; path=/; max-age=3600; SameSite=Lax`;
         return true;
       }
     } catch (error) {
-      console.error('Google sign-in error:', error);
+      console.error('Google authentication error:', error);
     }
     return false;
   };
@@ -105,7 +106,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, register, googleSignIn, logout, checkAuthStatus }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, register, continueWithGoogle, logout, checkAuthStatus }}>
       {children}
     </AuthContext.Provider>
   );
