@@ -12,7 +12,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const { login,googleSignIn } = useAuth();
+  const { login, continueWithGoogle } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e) => {
