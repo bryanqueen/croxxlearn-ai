@@ -7,6 +7,7 @@ import Header from '@/components/Header';
 import { useAuth } from '@/auth/useAuth';
 import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
+import { useMixpanel } from '../hooks/useMixpanel';
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -18,6 +19,7 @@ const Register = () => {
   
   const router = useRouter();
   const { continueWithGoogle } = useAuth();
+  const { trackEvent, setUserProfile } = useMixpanel();
 
   useEffect(() => {
     if (router.query.referralCode) {
@@ -32,6 +34,17 @@ const Register = () => {
     try {
       const response = await axios.post('/api/register', { name, email, password, referralCode });
       if (response.data.success) {
+        console.log("userData:", response.data)
+        trackEvent('sign_up', { 
+          method: 'email', 
+          has_referral: !!referralCode,
+          user_id: response.data.userId // Assuming the API returns a userId
+        });
+        setUserProfile(response.data.userId, {
+          $name: response.data.name,
+          $email: response.data.email,
+          method: 'email',
+        })
         toast.success('Registration successful. Please check your email for OTP.');
         localStorage.setItem('verificationEmail', email);
         router.push('/verify-email');
@@ -40,25 +53,33 @@ const Register = () => {
       }
     } catch (error) {
       toast.error('An error occurred during registration. Please try again.');
+      console.error('Registration error:', error);
     } finally {
       setLoading(false);
     }
   };
 
-
   const handleGoogleAuth = async () => {
-    const success = await continueWithGoogle();
-    if (success) {
-      router.push('/welcome');
-    } else {
-      toast.error('Google sign-in failed. Please try again.');
-      console.error('Google authentication failed');
+    try {
+      const success = await continueWithGoogle();
+      if (success) {
+        trackEvent('sign_up', { 
+          method: 'google',
+          // has_referral: !!referralCode
+        });
+
+        router.push('/welcome');
+      } else {
+        toast.error('Google sign-up failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Google authentication failed', error);
+      toast.error('An error occurred during Google sign-up. Please try again.');
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-black text-white">
-      {/* <Header /> */}
       <Toaster position="top-center" reverseOrder={false} />
       <main className="flex-grow flex flex-col items-center justify-center p-4">
         <div className="w-full max-w-md">
@@ -111,7 +132,11 @@ const Register = () => {
                 </button>
               </div>
             </div>
-            <input type="hidden" name="referralCode" value={referralCode} />
+            <input 
+              type="hidden" 
+              name="referralCode" 
+              value={referralCode} 
+            />
             <button 
               type="submit" 
               className="w-full p-3 bg-blue-600 text-white rounded font-bold hover:bg-blue-700 transition duration-300 disabled:opacity-50 mb-4"
@@ -126,7 +151,7 @@ const Register = () => {
               className="w-full p-3 bg-white text-gray-800 rounded font-bold hover:bg-gray-100 transition duration-300 flex items-center justify-center"
             >
               <FcGoogle className="mr-2" size={24} />
-              continue with Google
+              Continue with Google
             </button>
           </div>
           <p className="mt-4 text-center">

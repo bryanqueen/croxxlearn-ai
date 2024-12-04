@@ -1,58 +1,45 @@
-
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
 import dbConnect from '@/lib/mongodb';
 import User from '@/model/User';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 export default async function handler(req, res) {
-  console.log('Login API called');
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: 'Method not allowed' });
+  }
+
   await dbConnect();
 
-  if (req.method === 'POST') {
-    console.log('POST request received');
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    try {
-      const user = await User.findOne({ email });
-      console.log('User found:', user ? 'Yes' : 'No');
+  try {
+    const user = await User.findOne({ email });
 
-      if (user && (await bcrypt.compare(password, user.password))) {
-        console.log('Password matched');
-        const token = jwt.sign({ userId: user._id, email }, process.env.JWT_SECRET, {
-          expiresIn: '1h', // Token expires in 1 hour
-        });
-
-        console.log('JWT created');
-        console.log('Generated token:', token);
-
-        // Set the token in an HTTP-only cookie
-        const cookieOptions = [
-          `authToken=${token}`,
-          'Path=/',
-          'Max-Age=3600',
-          'SameSite=Lax',
-        ];
-
-        // Add Secure flag if not in development
-        if (process.env.NODE_ENV === 'production') {
-          cookieOptions.push('Secure');
-        }
-
-        res.setHeader('Set-Cookie', cookieOptions.join('; '));
-        console.log('Cookie set:', cookieOptions.join('; '));
-
-        return res.status(200).json({ success: true, message: 'Login successful', token: token });
-      } else {
-        console.log('Invalid credentials');
-        return res.status(401).json({ success: false, message: 'Invalid credentials' });
-      }
-    } catch (error) {
-      console.error('Server error:', error);
-      res.status(500).json({ success: false, error: 'Server error' });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid credentials' });
     }
-  } else {
-    console.log(`Method ${req.method} not allowed`);
-    res.setHeader('Allow', ['POST']);
-    return res.status(405).end(`Method ${req.method} Not Allowed`);
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    if (!user.isVerified) {
+      return res.status(403).json({ 
+        message: 'Email not verified', 
+        email: user.email,
+        requiresVerification: true 
+      });
+    }
+
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: '1d',
+    });
+
+    res.status(200).json({ token, user: { id: user._id, name: user.name, email: user.email } });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
   }
 }

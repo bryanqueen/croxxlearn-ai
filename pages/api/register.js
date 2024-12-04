@@ -92,6 +92,8 @@ export default async function handler(req, res) {
       success: true,
       message: 'User registered successfully. Please check your email for the verification OTP.',
       userId: newUser._id,
+      name: newUser.name,
+      email: newUser.email
     });
 
   } catch (error) {

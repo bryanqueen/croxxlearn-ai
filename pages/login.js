@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/auth/useAuth';
 import Link from 'next/link';
-import Header from '@/components/Header';
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import { FcGoogle } from 'react-icons/fc';
 import toast, { Toaster } from 'react-hot-toast';
+import { useMixpanel } from '../hooks/useMixpanel';
 
 const Login = () => {
   const [error, setError] = useState('');
@@ -14,6 +14,7 @@ const Login = () => {
 
   const { login, continueWithGoogle } = useAuth();
   const router = useRouter();
+  const { trackEvent, setUserProfile } = useMixpanel();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,35 +25,40 @@ const Login = () => {
     const password = e.target.password.value;
 
     try {
-      const success = await login(email, password);
-      if (success) {
-        // Add the delay here
-        setTimeout(() => {
-          router.push('/welcome');
-        }, 100); // 100ms delay
-        
+      const response = await login(email, password);
+      if (response.requiresVerification) {
+        localStorage.setItem('verificationEmail', email);
+        router.push('/verify-email');
+      } else if (response.success) {
+        trackEvent('login', { method: 'email' });
+        router.push('/welcome');
       } else {
-        setError('Invalid credentials.');
+        setError(response.message || 'Invalid credentials.');
       }
     } catch (error) {
-      setError(error.message);
+      setError(error.message || 'An error occurred during login. Please try again.');
     } finally {
       setLoading(false);
     }
   };
+
   const handleGoogleAuth = async () => {
-    const success = await continueWithGoogle();
-    if (success) {
-      router.push('/welcome');
-    } else {
-      toast.error('Google sign-in failed. Please try again.');
-      console.error('Google authentication failed');
+    try {
+      const success = await continueWithGoogle();
+      if (success) {
+        trackEvent('login', { method: 'google' });
+        router.push('/welcome');
+      } else {
+        toast.error('Google sign-in failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Google authentication failed', error);
+      toast.error('An error occurred during Google sign-in. Please try again.');
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-black text-white">
-      {/* <Header/> */}
       <Toaster position="top-center" reverseOrder={false} />
       <main className="flex-grow flex flex-col items-center justify-center p-4">
         <div className="w-full max-w-md">
@@ -88,15 +94,15 @@ const Login = () => {
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <IoMdEye className='w-5 h-5 text-gray-800'/>
+                    <IoMdEye className='w-5 h-5 text-gray-400'/>
                   ) : (
-                    <IoMdEyeOff className='w-5 h-5 text-gray-800'/>
+                    <IoMdEyeOff className='w-5 h-5 text-gray-400'/>
                   )}
                 </div>
               </div>
             </div>
             <div className='mb-4'>
-            <Link href="/forgot-password" className="text-blue-500 hover:underline">forgot password?</Link>    
+              <Link href="/forgot-password" className="text-blue-500 hover:underline">Forgot password?</Link>    
             </div>
             <button 
               type="submit" 
@@ -112,7 +118,7 @@ const Login = () => {
               className="w-full p-3 bg-white text-gray-800 rounded font-bold hover:bg-gray-100 transition duration-300 flex items-center justify-center"
             >
               <FcGoogle className="mr-2" size={24} />
-              continue with Google
+              Continue with Google
             </button>
           </div>
           <p className="mt-4 text-center">

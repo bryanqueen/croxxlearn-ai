@@ -314,12 +314,17 @@ export default function DocChat() {
     }
   };
 
+  const MAX_PAGES = 50;
+
   const EmptySummariesState = () => (
     <div className="flex flex-col items-center justify-center h-full text-center p-4">
       <FiUpload className="h-16 w-16 mb-4 text-gray-400" />
       <h2 className="text-2xl font-bold mb-2">Upload a document to get started</h2>
       <p className="text-gray-400 mb-4">
         Feed me your documents (pdf, doc, docx, text) and I will generate summaries to help you quickly understand it, then ask questions on what you are not clear on.
+      </p>
+      <p className="text-yellow-500 mb-4 font-semibold">
+        Note: Currently, we can only process documents up to {MAX_PAGES} pages long.
       </p>
       <Button
         onClick={() => fileInputRef.current.click()}

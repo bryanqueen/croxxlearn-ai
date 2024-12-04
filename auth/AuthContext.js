@@ -1,7 +1,6 @@
 import { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { initializeApp } from "firebase/app";
-// import { getAnalytics }  from 'firebase/analytics'
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 
 axios.defaults.withCredentials = true;
@@ -14,7 +13,6 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-// const analytics = getAnalytics(app);
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
@@ -48,27 +46,30 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true);
         setUser(response.data.user);
         document.cookie = `authToken=${response.data.token}; path=/; max-age=3600; SameSite=Lax`;
-        return true;
+        return { success: true };
+      } else if (response.data.requiresVerification) {
+        return { requiresVerification: true, email: response.data.email };
       }
+      return { success: false, message: response.data.message };
     } catch (error) {
       console.error('Login error:', error);
+      return { success: false, message: error.response?.data?.message || 'An error occurred' };
     }
-    return false;
   };
 
+  //Not currently in use
   const register = async (name, email, password, referralCode) => {
     try {
       const response = await axios.post('/api/register', { name, email, password, referralCode });
       if (response.data.success) {
-        setIsAuthenticated(true);
-        setUser(response.data.user);
-        document.cookie = `authToken=${response.data.token}; path=/; max-age=3600; SameSite=Lax`;
-        return true;
+        // Don't set authenticated or user here, as email verification is required
+        return { success: true, message: 'Registration successful. Please verify your email.' };
       }
+      return { success: false, message: response.data.message };
     } catch (error) {
       console.error('Registration error:', error);
+      return { success: false, message: error.response?.data?.message || 'An error occurred' };
     }
-    return false;
   };
 
   const continueWithGoogle = async () => {
@@ -83,7 +84,6 @@ export const AuthProvider = ({ children }) => {
       if (response.data.success) {
         setIsAuthenticated(true);
         setUser(response.data.user);
-        // Store the token in a cookie
         document.cookie = `authToken=${response.data.token}; path=/; max-age=3600; SameSite=Lax`;
         return true;
       }

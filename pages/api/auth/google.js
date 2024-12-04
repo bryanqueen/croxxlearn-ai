@@ -2,6 +2,8 @@
 import dbConnect from '@/lib/mongodb';
 import User from '@/model/User';
 import jwt from 'jsonwebtoken';
+import mixpanel from 'mixpanel-browser';
+
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -9,6 +11,8 @@ export default async function handler(req, res) {
   }
 
   await dbConnect();
+
+  const mixpanelClient = mixpanel.init(process.env.NEXT_PUBLIC_MIXPANEL_TOKEN)
 
   const { name, email, googleId } = req.body;
 
@@ -31,6 +35,11 @@ export default async function handler(req, res) {
         referralCode: Math.random().toString(36).substr(2, 8).toUpperCase(),
       });
       await user.save();
+      // await mixpanelClient.people.set(user._id,{
+      //   $name: user.name,
+      //   $email: user.email,
+      //   method: 'google'
+      // })
     }
 
     // Generate JWT token

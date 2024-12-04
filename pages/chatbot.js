@@ -28,6 +28,7 @@ function Chatbot({chat}) {
   const router = useRouter();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [chatToDelete, setChatToDelete] = useState(null);
+  const [showSampleQuestions, setShowSampleQuestions] = useState(true);
 
   const sampleQuestions = [
     "What are the key differences between a thesis and a dissertation?",
@@ -50,7 +51,7 @@ function Chatbot({chat}) {
   useEffect(() => {
     fetchChats();
 
-  const handleClickOutside = (event) => {
+    const handleClickOutside = (event) => {
       if (
         sidebarRef.current && 
         !sidebarRef.current.contains(event.target) && 
@@ -99,15 +100,18 @@ function Chatbot({chat}) {
           if (currentChat) {
             setCurrentChatId(currentChat._id);
             setMessages(currentChat.messages || []);
+            setShowSampleQuestions(false);
           } else {
             // If the ID in the URL doesn't match any chat, clear messages and currentChatId
             setCurrentChatId(null);
             setMessages([]);
+            setShowSampleQuestions(true);
           }
         } else {
           // If there's no ID in the URL, clear messages and currentChatId
           setCurrentChatId(null);
           setMessages([]);
+          setShowSampleQuestions(true);
         }
       }
     } catch (error) {
@@ -123,6 +127,7 @@ function Chatbot({chat}) {
     const submittedInput = questionText || input;
     if (!submittedInput.trim()) return;
 
+    setShowSampleQuestions(false);
     const userMessage = { role: 'user', content: submittedInput };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setInput('');
@@ -218,6 +223,7 @@ function Chatbot({chat}) {
         if (currentChatId === chatToDelete) {
           setCurrentChatId(null);
           setMessages([]);
+          setShowSampleQuestions(true);
         }
       } else {
         const errorData = await response.json();
@@ -298,7 +304,6 @@ function Chatbot({chat}) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white">
         <Loader2 className="w-16 h-16 text-blue-500 animate-spin"/>
-        {/* <p className="mt-4 text-xl">Loading...</p> */}
       </div>
     );
   }
@@ -331,6 +336,7 @@ function Chatbot({chat}) {
             onClick={() => {
               setCurrentChatId(null);
               setMessages([]);
+              setShowSampleQuestions(true);
               router.push('/chatbot', undefined, {shallow: true})
             }}
             className="w-full p-2 mb-4 bg-blue-600 text-white rounded hover:bg-blue-700 transition duration-300"
@@ -348,6 +354,7 @@ function Chatbot({chat}) {
                 onClick={() => {
                   setCurrentChatId(chat._id);
                   setMessages(chat.messages || []);
+                  setShowSampleQuestions(false);
                   router.push(`/chatbot?id=${chat._id}`, undefined, { shallow: true });
                 }}
                 className="flex-grow"
@@ -370,7 +377,7 @@ function Chatbot({chat}) {
 
         <main className="flex-grow overflow-y-auto p-4 pb-36">
           <div className="max-w-3xl mx-auto">
-            {!currentChatId ? (
+            {showSampleQuestions ? (
               <div className="flex flex-col items-center justify-center h-full">
                 <h2 className="text-3xl font-bold text-blue-400">CroxxChat</h2>
                 <p className='mb-4 font-bold text-center text-gray-300'>Chat me about any of your academic topics😉</p>
