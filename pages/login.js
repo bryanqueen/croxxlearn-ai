@@ -4,17 +4,19 @@ import { useAuth } from '@/auth/useAuth';
 import Link from 'next/link';
 import { IoMdEye, IoMdEyeOff } from "react-icons/io";
 import { FcGoogle } from 'react-icons/fc';
+import { Loader2 } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useMixpanel } from '../hooks/useMixpanel';
 
 const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const { login, continueWithGoogle } = useAuth();
   const router = useRouter();
-  const { trackEvent, setUserProfile } = useMixpanel();
+  const { trackEvent } = useMixpanel();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -43,6 +45,7 @@ const Login = () => {
   };
 
   const handleGoogleAuth = async () => {
+    setGoogleLoading(true);
     try {
       const success = await continueWithGoogle();
       if (success) {
@@ -54,6 +57,8 @@ const Login = () => {
     } catch (error) {
       console.error('Google authentication failed', error);
       toast.error('An error occurred during Google sign-in. Please try again.');
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -89,16 +94,18 @@ const Login = () => {
                   required 
                   className="w-full p-3 border border-gray-700 rounded bg-gray-800 text-white focus:outline-none focus:border-blue-500" 
                 />
-                <div
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
                     <IoMdEye className='w-5 h-5 text-gray-400'/>
                   ) : (
                     <IoMdEyeOff className='w-5 h-5 text-gray-400'/>
                   )}
-                </div>
+                </button>
               </div>
             </div>
             <div className='mb-4'>
@@ -115,10 +122,15 @@ const Login = () => {
           <div className="mt-4">
             <button 
               onClick={handleGoogleAuth}
-              className="w-full p-3 bg-white text-gray-800 rounded font-bold hover:bg-gray-100 transition duration-300 flex items-center justify-center"
+              disabled={googleLoading}
+              className="w-full p-3 bg-white text-gray-800 rounded font-bold hover:bg-gray-100 transition duration-300 flex items-center justify-center disabled:opacity-50"
             >
-              <FcGoogle className="mr-2" size={24} />
-              Continue with Google
+              {googleLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+              ) : (
+                <FcGoogle className="mr-2" size={24} />
+              )}
+              {googleLoading ? 'Authenticating...' : 'Continue with Google'}
             </button>
           </div>
           <p className="mt-4 text-center">
@@ -127,7 +139,7 @@ const Login = () => {
         </div>
       </main>
       <footer className="p-4 border-t border-gray-800 text-center text-sm text-gray-500">
-        © 2024 Croxxlearn AI. All rights reserved.
+        © {new Date().getFullYear()} Croxxlearn AI. All rights reserved.
       </footer>
     </div>
   );

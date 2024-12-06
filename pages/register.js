@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { IoMdEye, IoMdEyeOff } from 'react-icons/io';
 import { FcGoogle } from 'react-icons/fc';
+import { Loader2 } from 'lucide-react';
 import Header from '@/components/Header';
 import { useAuth } from '@/auth/useAuth';
 import axios from 'axios';
@@ -15,6 +16,7 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   
   const router = useRouter();
@@ -38,7 +40,7 @@ const Register = () => {
         trackEvent('sign_up', { 
           method: 'email', 
           has_referral: !!referralCode,
-          user_id: response.data.userId // Assuming the API returns a userId
+          user_id: response.data.userId
         });
         setUserProfile(response.data.userId, {
           $name: response.data.name,
@@ -60,14 +62,13 @@ const Register = () => {
   };
 
   const handleGoogleAuth = async () => {
+    setGoogleLoading(true);
     try {
       const success = await continueWithGoogle();
       if (success) {
         trackEvent('sign_up', { 
           method: 'google',
-          // has_referral: !!referralCode
         });
-
         router.push('/welcome');
       } else {
         toast.error('Google sign-up failed. Please try again.');
@@ -75,6 +76,8 @@ const Register = () => {
     } catch (error) {
       console.error('Google authentication failed', error);
       toast.error('An error occurred during Google sign-up. Please try again.');
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -148,10 +151,15 @@ const Register = () => {
           <div className="mt-4">
             <button 
               onClick={handleGoogleAuth}
-              className="w-full p-3 bg-white text-gray-800 rounded font-bold hover:bg-gray-100 transition duration-300 flex items-center justify-center"
+              disabled={googleLoading}
+              className="w-full p-3 bg-white text-gray-800 rounded font-bold hover:bg-gray-100 transition duration-300 flex items-center justify-center disabled:opacity-50"
             >
-              <FcGoogle className="mr-2" size={24} />
-              Continue with Google
+              {googleLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+              ) : (
+                <FcGoogle className="mr-2" size={24} />
+              )}
+              {googleLoading ? 'Authenticating...' : 'Continue with Google'}
             </button>
           </div>
           <p className="mt-4 text-center">
