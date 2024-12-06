@@ -88,7 +88,7 @@ function Chatbot({chat}) {
     setInput(e.target.value);
   };
 
-  const fetchChats = async () => {
+  const fetchChats = async (shouldResetMessages = true) => {
     if (!isInitialLoad) setIsLoading(true);
     try {
       const token = Cookies.get('authToken');
@@ -106,19 +106,21 @@ function Chatbot({chat}) {
           const currentChat = fetchedChats.find(chat => chat._id === urlChatId);
           if (currentChat) {
             setCurrentChatId(currentChat._id);
-            setMessages(currentChat.messages || []);
+            if (shouldResetMessages) {
+              setMessages(currentChat.messages || []);
+            }
             setShowSampleQuestions(false);
-            setHasInteracted(true);
-          } else {
+          } else if (shouldResetMessages) {
             setCurrentChatId(null);
             setMessages([]);
-            setShowSampleQuestions(!hasInteracted);
+            setShowSampleQuestions(true);
           }
-        } else {
+        } else if (shouldResetMessages) {
           setCurrentChatId(null);
           setMessages([]);
-          setShowSampleQuestions(!hasInteracted);
+          setShowSampleQuestions(true);
         }
+        return fetchedChats;
       }
     } catch (error) {
       console.error('Error fetching chats:', error);
@@ -133,10 +135,12 @@ function Chatbot({chat}) {
     const submittedInput = questionText || input;
     if (!submittedInput.trim()) return;
 
-    setHasInteracted(true);
     setShowSampleQuestions(false);
     const userMessage = { role: 'user', content: submittedInput };
-    setMessages((prevMessages) => [...prevMessages, userMessage]);
+    
+    // Update messages immediately and persist them
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     setInput('');
     setLoading(true);
 
@@ -163,7 +167,8 @@ function Chatbot({chat}) {
       const decoder = new TextDecoder();
 
       let aiMessage = { role: 'assistant', content: '' };
-      setMessages((prevMessages) => [...prevMessages, aiMessage]);
+      const updatedMessages = [...newMessages, aiMessage];
+      setMessages(updatedMessages);
 
       while (true) {
         const { value, done } = await reader.read();
@@ -177,23 +182,27 @@ function Chatbot({chat}) {
             const data = line.slice(6);
             if (data === '[DONE]') {
               setLoading(false);
-              if (!currentChatId) {
-                await fetchChats();
-              }
               break;
             }
             try {
               const parsedData = JSON.parse(data);
               if (parsedData.chatId && !currentChatId) {
                 setCurrentChatId(parsedData.chatId);
-                const newChat = { _id: parsedData.chatId, title: parsedData.title || 'New Chat', messages: [userMessage] };
-                setChats((prevChats) => [newChat, ...prevChats]);
+                const newChat = { 
+                  _id: parsedData.chatId, 
+                  title: parsedData.title || 'New Chat', 
+                  messages: updatedMessages 
+                };
+                setChats(prevChats => [newChat, ...prevChats]);
                 router.push(`/chatbot?id=${parsedData.chatId}`, undefined, { shallow: true });
+                
+                // Ensure the messages are preserved
+                localStorage.setItem(`chat_messages_${parsedData.chatId}`, JSON.stringify(updatedMessages));
               } else if (typeof parsedData === 'string') {
                 aiMessage.content += parsedData;
-                setMessages((prevMessages) => [
+                setMessages(prevMessages => [
                   ...prevMessages.slice(0, -1),
-                  { ...aiMessage },
+                  { ...aiMessage }
                 ]);
               }
             } catch (e) {
@@ -202,11 +211,22 @@ function Chatbot({chat}) {
           }
         }
       }
+
+      // After the chat is complete, fetch chats without resetting the messages
+      if (!currentChatId) {
+        const updatedChats = await fetchChats(false);
+        if (updatedChats && updatedChats.length > 0) {
+          const newestChat = updatedChats[0];
+          setCurrentChatId(newestChat._id);
+          // Don't reset messages here
+        }
+      }
+
     } catch (error) {
       console.error('Error fetching response:', error);
-      setMessages((prevMessages) => [
+      setMessages(prevMessages => [
         ...prevMessages,
-        { role: 'assistant', content: `Error: ${error instanceof Error ? error.message : String(error)}` },
+        { role: 'assistant', content: `Error: ${error instanceof Error ? error.message : String(error)}` }
       ]);
     } finally {
       setLoading(false);
@@ -242,6 +262,24 @@ function Chatbot({chat}) {
       setDeleteModalOpen(false);
       setChatToDelete(null);
     }
+  };
+
+    // Update the new chat button click handler
+    const handleNewChat = () => {
+      setCurrentChatId(null);
+      setMessages([]);
+      setShowSampleQuestions(true);
+      setSidebarOpen(false); // Close sidebar on mobile when starting new chat
+      router.push('/chatbot', undefined, {shallow: true});
+    };
+
+    // Update the chat selection handler
+  const handleChatSelect = (chat) => {
+    setCurrentChatId(chat._id);
+    setMessages(chat.messages || []);
+    setShowSampleQuestions(false);
+    setSidebarOpen(false); // Close sidebar on mobile when selecting a chat
+    router.push(`/chatbot?id=${chat._id}`, undefined, { shallow: true });
   };
 
   const formatAIResponse = (content) => {
@@ -340,13 +378,7 @@ function Chatbot({chat}) {
           `}
         >
           <button 
-            onClick={() => {
-              setCurrentChatId(null);
-              setMessages([]);
-              setShowSampleQuestions(true);
-              setHasInteracted(false);
-              router.push('/chatbot', undefined, {shallow: true})
-            }}
+            onClick={handleNewChat}
             className="w-full p-2 mb-4 bg-blue-600 text-white rounded hover:bg-blue-700 transition duration-300"
           >
             New Chat
@@ -359,13 +391,7 @@ function Chatbot({chat}) {
               }`}
             >
               <span 
-                onClick={() => {
-                  setCurrentChatId(chat._id);
-                  setMessages(chat.messages || []);
-                  setShowSampleQuestions(false);
-                  setHasInteracted(true);
-                  router.push(`/chatbot?id=${chat._id}`, undefined, { shallow: true });
-                }}
+                onClick={() => handleChatSelect(chat)}
                 className="flex-grow"
               >
                 {chat.title}
@@ -386,7 +412,7 @@ function Chatbot({chat}) {
 
         <main className="flex-grow overflow-y-auto p-4 pb-36">
           <div className="max-w-3xl mx-auto">
-            {!hasInteracted && showSampleQuestions ? (
+            {messages.length === 0 && showSampleQuestions ? (
               <div className="flex flex-col items-center justify-center h-full">
                 <h2 className="text-3xl font-bold text-blue-400">CroxxChat</h2>
                 <p className='mb-4 font-bold text-center text-gray-300'>Chat me about any of your academic topics😉</p>
