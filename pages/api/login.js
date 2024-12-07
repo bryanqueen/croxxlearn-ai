@@ -37,7 +37,7 @@ export default async function handler(req, res) {
       expiresIn: '1d',
     });
 
-    res.status(200).json({ token, user: { id: user._id, name: user.name, email: user.email } });
+    res.status(200).json({ success: true, token, user: { id: user._id, name: user.name, email: user.email } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error' });

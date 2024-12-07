@@ -136,6 +136,7 @@ function Chatbot({chat}) {
     if (!submittedInput.trim()) return;
 
     setShowSampleQuestions(false);
+    setHasInteracted(true)
     const userMessage = { role: 'user', content: submittedInput };
     
     // Update messages immediately and persist them
@@ -168,7 +169,8 @@ function Chatbot({chat}) {
 
       let aiMessage = { role: 'assistant', content: '' };
       const updatedMessages = [...newMessages, aiMessage];
-      setMessages(updatedMessages);
+
+       setMessages([...updatedMessages]);
 
       while (true) {
         const { value, done } = await reader.read();
@@ -212,15 +214,22 @@ function Chatbot({chat}) {
         }
       }
 
-      // After the chat is complete, fetch chats without resetting the messages
-      if (!currentChatId) {
-        const updatedChats = await fetchChats(false);
-        if (updatedChats && updatedChats.length > 0) {
-          const newestChat = updatedChats[0];
-          setCurrentChatId(newestChat._id);
-          // Don't reset messages here
-        }
-      }
+      // // After the chat is complete, fetch chats without resetting the messages
+      // if (!currentChatId) {
+      //   const updatedChats = await fetchChats(false);
+      //   if (updatedChats && updatedChats.length > 0) {
+      //     const newestChat = updatedChats[0];
+      //     setCurrentChatId(newestChat._id);
+      //     // Don't reset messages here
+      //   }
+      // }
+
+           // After chat completion, update messages one final time
+           setMessages(prevMessages => {
+            const finalMessages = [...prevMessages];
+            finalMessages[finalMessages.length - 1] = { ...aiMessage };
+            return finalMessages;
+          });
 
     } catch (error) {
       console.error('Error fetching response:', error);
@@ -412,7 +421,7 @@ function Chatbot({chat}) {
 
         <main className="flex-grow overflow-y-auto p-4 pb-36">
           <div className="max-w-3xl mx-auto">
-            {messages.length === 0 && showSampleQuestions ? (
+            {messages.length === 0 && showSampleQuestions && !hasInteracted ? (
               <div className="flex flex-col items-center justify-center h-full">
                 <h2 className="text-3xl font-bold text-blue-400">CroxxChat</h2>
                 <p className='mb-4 font-bold text-center text-gray-300'>Chat me about any of your academic topics😉</p>

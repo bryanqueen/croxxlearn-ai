@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const response = await axios.post('/api/login', { email, password });
-      if (response.data.success) {
+      if (response.data.token) {
         setIsAuthenticated(true);
         setUser(response.data.user);
         document.cookie = `authToken=${response.data.token}; path=/; max-age=3600; SameSite=Lax`;
